@@ -1,0 +1,16 @@
+[project]
+name = "booking-agent-bench"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "browser-use",
+    "playwright",
+    "psutil",
+    "python-dotenv",
+    "fastapi",
+    "uvicorn",
+    "httpx",
+]
+
+[tool.uv]
+package = false

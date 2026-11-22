@@ -1,0 +1,72 @@
+[
+  {
+    "task_id": "t01",
+    "site": "s1_simple",
+    "instruction": "Đặt giúp mình bàn 2 người tối 12/12/2026 lúc 19:00, tên Nguyễn An, SĐT 0901234567.",
+    "expected": {"date": "2026-12-12", "time": "19:00", "party_size": 2, "name": "Nguyễn An", "phone": "0901234567"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t02",
+    "site": "s1_simple",
+    "instruction": "Book a table for 4 on 2026-12-20 at 12:30 under Tran Binh, phone 0912 345 678.",
+    "expected": {"date": "2026-12-20", "time": "12:30", "party_size": 4, "name": "Tran Binh", "phone": "0912345678"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t03",
+    "site": "s2_wizard",
+    "instruction": "Cho mình 1 bàn 6 người trưa thứ Bảy 19/12/2026, 11:30 nhé. Tên Lê Chi, số 0987654321.",
+    "expected": {"date": "2026-12-19", "time": "11:30", "party_size": 6, "name": "Lê Chi", "phone": "0987654321"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t04",
+    "site": "s2_wizard",
+    "instruction": "Đặt bàn 3 người ngày 31/12/2026 lúc 20:30, khách Phạm Dũng, điện thoại 0933 222 111.",
+    "expected": {"date": "2026-12-31", "time": "20:30", "party_size": 3, "name": "Phạm Dũng", "phone": "0933222111"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t05",
+    "site": "s3_spa",
+    "instruction": "Mình muốn đặt bàn 2 người tối 14/12/2026 lúc 18:45, tên Hoàng Mai, SĐT 0977111222.",
+    "expected": {"date": "2026-12-14", "time": "18:45", "party_size": 2, "name": "Hoàng Mai", "phone": "0977111222"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t06",
+    "site": "s3_spa",
+    "instruction": "Đặt 1 bàn 8 người ngày 24/12/2026 lúc 19:30 cho Võ Khang, liên hệ 0909 888 777.",
+    "expected": {"date": "2026-12-24", "time": "19:30", "party_size": 8, "name": "Võ Khang", "phone": "0909888777"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t07",
+    "site": "s4_guarded",
+    "instruction": "Đặt bàn 2 người 15/12/2026 lúc 19:00, tên Đỗ Lan, SĐT 0966555444.",
+    "expected": {"date": "2026-12-15", "time": "19:00", "party_size": 2, "name": "Đỗ Lan", "phone": "0966555444"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t08",
+    "site": "s4_guarded",
+    "instruction": "Book 5 people on 2026-12-27 at 18:00, name Bui Minh, phone 0944333222.",
+    "expected": {"date": "2026-12-27", "time": "18:00", "party_size": 5, "name": "Bui Minh", "phone": "0944333222"},
+    "needs_otp": false
+  },
+  {
+    "task_id": "t09",
+    "site": "s5_otp",
+    "instruction": "Đặt bàn 2 người tối 18/12/2026 lúc 20:00, tên Ngô Hà, SĐT 0922111000. Nếu cần mã OTP thì hỏi mình.",
+    "expected": {"date": "2026-12-18", "time": "20:00", "party_size": 2, "name": "Ngô Hà", "phone": "0922111000"},
+    "needs_otp": true
+  },
+  {
+    "task_id": "t10",
+    "site": "s5_otp",
+    "instruction": "Đặt giúp 4 người trưa 21/12/2026 lúc 12:00, tên Trịnh Quân, SĐT 0955666777.",
+    "expected": {"date": "2026-12-21", "time": "12:00", "party_size": 4, "name": "Trịnh Quân", "phone": "0955666777"},
+    "needs_otp": true
+  }
+]
