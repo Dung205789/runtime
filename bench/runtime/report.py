@@ -121,6 +121,7 @@ def collect() -> dict:
             d[f"{name}_cpu_p50"] = pct([r["cpu_s"] for r in rr], .5)
             d[f"{name}_t_p50"], d[f"{name}_t_p95"] = (pct([active_s(r) for r in rr], q) for q in (.5, .95))
             d[f"{name}_scope"] = next((r["machine"].get("mem_scope") for r in rr if r["machine"].get("mem_scope")), "")
+            d[f"{name}_container_p50"] = pct([r["versions"].get("container_pss_peak_mb") for r in rr], .5)
         c3r = [r for r in c3 if r["provider"] == rt]
         d["c3_lost"] = sum(r["outcome"] == "crashed" for r in c3r)
         d["c3_timeout"] = sum(r["outcome"] == "timeout" for r in c3r)
@@ -236,7 +237,12 @@ def blk_resources(D):
         for c in ("c1", "c3", "c5"):
             cells.append(f'{f(d[f"{c}_ram_p50"], 0)} / {f(d[f"{c}_ram_p95"], 0)}')
         cells.append(f(d["c1_cpu_p50"], 1, " s"))
-        rows.append([f"`{rt}`", *cells, d["c1_scope"].split(" (")[0].replace("cây tiến trình pid", "cây tiến trình Chrome pid")])
+        scope = re.sub(r"\s*(pid \d+|bench-steel-\d+)", "", d["c1_scope"].split(" (")[0])
+        if rt == "chrome_local":
+            scope = "USS cây tiến trình Chrome của phiên"
+        if d["c1_container_p50"]:
+            scope += f' (cả container, có Node.js: p50 {d["c1_container_p50"]:.0f} MB)'
+        rows.append([f"`{rt}`", *cells, scope])
     return table(["Runtime", "RAM đỉnh MB, 1 phiên (p50 / p95)", "3 song song", "5 song song", "CPU p50 / lượt",
                   "Đo cái gì"], rows)
 
