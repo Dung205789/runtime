@@ -309,17 +309,11 @@ def blk_scores(D):
     parts = []
     head = ["Runtime", "p95 lượt đặt (35)", "$/1.000 (30)", "RAM/phiên (15)", "p95 cold start (10)",
             "Live View (10)", "Tổng /100"]
-    patched = RES / "liveview" / "steel_selfhost_serverpatch.json"
-    P = ({**D, "steel_selfhost": {**D["steel_selfhost"], "lv": json.loads(patched.read_text(encoding="utf-8"))}}
-         if patched.exists() else None)
     variants = [
         ("Chính thức (theo hợp đồng mục 10, chỉ runtime qua cổng loại)", D, passed, True),
         ("Tham khảo: cả 5 runtime, bỏ qua cổng loại", D, RUNTIMES, True),
         ("Tham khảo: cả 5 runtime, bỏ RAM (RAM cloud chỉ đo phía client nên không so được với local)", D, RUNTIMES, False),
     ]
-    if P:
-        variants += [("Phương án: `steel_selfhost` vá 1 dòng cho Live View (mục 5), runtime qua cổng loại", P, passed, True),
-                     ("Phương án vá 1 dòng, bỏ RAM, runtime qua cổng loại", P, passed, False)]
     for title, data, cands, use_ram in variants:
         if not cands:
             parts.append(f"**{title}:** không runtime nào qua cổng loại.")

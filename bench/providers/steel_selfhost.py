@@ -13,7 +13,12 @@ README (tra 2026-11-23): https://github.com/steel-dev/steel-browser
 - Trình duyệt trong container mở được mock site qua host.docker.internal dù mock site chỉ nghe 127.0.0.1
   (Docker Desktop chuyển tiếp về loopback của máy).
 
+- **Live View của image gốc hỏng** (build 2026-11-21): router websocket chỉ nhận /v1/sessions/cast nhưng hàm xử lý lại
+  đọc id phiên từ /v1/sessions/{id}/cast, nên trang /v1/sessions/debug không nhận được hình. Mặc định dùng image đã vá
+  1 dòng `bench-steel-browser:liveview-fix` (steel_patch/Dockerfile, build từ bản gốc ghim theo digest).
+
 Lệnh tiện ích:
+    uv run python -m bench.providers.steel_selfhost build    # build image đã vá (up tự gọi nếu chưa có)
     uv run python -m bench.providers.steel_selfhost up [N]   # chạy N container (mặc định 1), cổng 3000, 3010, 3020…
     uv run python -m bench.providers.steel_selfhost probe    # tạo 1 phiên, in phản hồi, giải phóng
     uv run python -m bench.providers.steel_selfhost down     # xóa mọi container bench-steel-*
@@ -26,6 +31,7 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
 import httpx
@@ -33,7 +39,12 @@ import httpx
 from bench.core.contract import BrowserHandle
 from bench.providers._util import ProviderSkipped, raise_for_status, session_timeout_s
 
-IMAGE = "ghcr.io/steel-dev/steel-browser"
+STOCK_IMAGE = "ghcr.io/steel-dev/steel-browser"
+# Mặc định dùng image đã vá lỗi Live View (xem steel_patch/Dockerfile), build từ bản gốc ghim theo digest.
+# Đặt STEEL_SELFHOST_IMAGE=ghcr.io/steel-dev/steel-browser để chạy image gốc.
+PATCHED_IMAGE = "bench-steel-browser:liveview-fix"
+PATCH_DIR = Path(__file__).with_name("steel_patch")
+IMAGE = os.environ.get("STEEL_SELFHOST_IMAGE", PATCHED_IMAGE)
 CONTAINER_PREFIX = "bench-steel-"
 API_PORT0, CDP_PORT0, PORT_STEP = 3000, 9223, 10
 
@@ -125,7 +136,20 @@ class SteelSelfHost:
         return status != "live", f"status={status}"
 
 
+def build() -> int:
+    """Build image đã vá (chỉ khi đang dùng PATCHED_IMAGE và image chưa có)."""
+    if IMAGE != PATCHED_IMAGE:
+        return 0
+    have = subprocess.run(["docker", "image", "inspect", PATCHED_IMAGE], capture_output=True).returncode == 0
+    if have:
+        return 0
+    print(f"build {PATCHED_IMAGE} từ {PATCH_DIR} …", flush=True)
+    return subprocess.call(["docker", "build", "-t", PATCHED_IMAGE, str(PATCH_DIR)])
+
+
 def up(n: int) -> int:
+    if rc := build():
+        return rc
     for i in range(n):
         api, cdp = container_ports(i)
         name = f"{CONTAINER_PREFIX}{i}"
@@ -159,4 +183,6 @@ if __name__ == "__main__":
         sys.exit(up(int(sys.argv[2]) if len(sys.argv) > 2 else 1))
     if cmd == "down":
         sys.exit(down())
+    if cmd == "build":
+        sys.exit(build())
     asyncio.run(_probe())

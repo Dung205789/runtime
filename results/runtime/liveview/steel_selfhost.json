@@ -1,19 +1,22 @@
 {
  "runtime": "steel_selfhost",
- "checked_at": "2026-11-23T06:07:02.156298+00:00",
+ "checked_at": "2026-11-23T15:24:16.517704+00:00",
  "has_url": true,
- "typed_ok": false,
- "viewer_ws_frames": 0,
- "viewer_console_errors": [
-  "WebSocket connection to 'ws://localhost:3000/v1/sessions/cast?tabInfo=true' failed: Connection closed before receiving a handshake response",
-  "WebSocket connection to 'ws://localhost:3000/v1/sessions/cast?tabInfo=true' failed: Connection closed before receiving a handshake response",
-  "WebSocket connection to 'ws://localhost:3000/v1/sessions/cast?tabInfo=true' failed: Connection closed before receiving a handshake response",
-  "WebSocket connection to 'ws://localhost:3000/v1/sessions/cast?tabInfo=true' failed: Connection closed before receiving a handshake response",
-  "WebSocket connection to 'ws://localhost:3000/v1/sessions/cast?tabInfo=true' failed: Connection closed before receiving a handshake response"
- ],
- "viewer_element": null,
- "typed_value": "",
+ "typed_ok": true,
+ "provider_versions": {
+  "image": "bench-steel-browser:liveview-fix",
+  "containers": 1
+ },
+ "viewer_ws_frames": 19,
+ "viewer_console_errors": [],
+ "viewer_element": {
+  "tag": "CANVAS",
+  "x": 45.78125,
+  "y": 80,
+  "w": 1308.4375,
+  "h": 920
+ },
+ "typed_value": "4821",
  "method": "bàn phím, ô OTP đã focus sẵn",
- "input_latency_ms": null,
- "note": "không tự động gõ được qua Live View; cần kiểm tra bằng tay (mở URL, bấm vào ô OTP, gõ thử). Chưa kiểm chứng."
+ "input_latency_ms": 3.5
 }

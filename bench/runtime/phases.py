@@ -233,7 +233,8 @@ async def liveview(rt: str) -> dict:
     provider = get_provider(rt)
     folder = RESULTS / "liveview"
     folder.mkdir(parents=True, exist_ok=True)
-    info: dict = {"runtime": rt, "checked_at": now_iso(), "has_url": False, "typed_ok": False}
+    info: dict = {"runtime": rt, "checked_at": now_iso(), "has_url": False, "typed_ok": False,
+                  "provider_versions": getattr(provider, "versions", {})}
     async with httpx.AsyncClient() as http:
         await http.post(site_url("s5_otp") + "/_bench/reset")
     handle = await provider.start()

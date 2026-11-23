@@ -2,8 +2,10 @@
 
 - **Đang làm:** M3 đã đo xong (2026-11-23). Đã viết `reports/runtime.md`, đang chờ người dùng duyệt để mở PR. M4 chờ Agent 2 xong M3.
 - **Kết quả M3, tóm tắt:**
-  - `chrome_local` đứng đầu theo điểm hợp đồng, 87,4/100. `steel_selfhost` 74,1. Bỏ RAM thì Steel self-host hơn Chrome 2,2 điểm, dưới ngưỡng 5 điểm, nên vẫn chọn `chrome_local`.
-  - Live View của `steel_selfhost` hỏng do lỗi của image Steel. Vá 1 dòng thì chạy được. Khi đó Steel self-host được 84,1, chênh dưới 5 điểm nên vẫn chọn Chrome. Nếu vừa vá vừa bỏ RAM, Steel self-host được 99,0 và thắng (xem mục 8 của báo cáo).
+  - `chrome_local` 87,4/100, `steel_selfhost` 84,1. Chênh dưới 5 điểm, nên theo hợp đồng chọn `chrome_local`. Bỏ chỉ số RAM thì `steel_selfhost` được 99,1 và thắng.
+  - Live View của `steel_selfhost` đã sửa.
+    - Image gốc của Steel có lỗi. Provider giờ mặc định dùng image đã vá 1 dòng, `bench-steel-browser:liveview-fix`, build từ `bench/providers/steel_patch/Dockerfile`; `up()` tự build nếu chưa có.
+    - Agent 2 nếu dùng `steel_selfhost` thì cần Docker để build lần đầu.
   - `steel_cloud` trượt cổng giữ phiên 15 phút do gói Launch.
   - Bảng số tính lại bằng `uv run python -m bench.runtime.report`.
 - **Mốc đã xong:**
