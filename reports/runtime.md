@@ -6,7 +6,11 @@ Các bảng số trong file này do `uv run python -m bench.runtime.report` tín
 
 ## 1. Tóm tắt
 
-**Local (Chrome vs Steel self-host):** hai runtime ngang nhau về tốc độ, độ ổn định và chi phí, cả hai đều thành công 100%. Chrome nhẹ hơn rõ: khoảng 220 MB mỗi phiên, so với 530–880 MB mỗi container Steel. Steel self-host có hai điểm yếu: Live View không dùng được, và trang kiểm tra bot BrowserScan nhận ra nó là robot. Chrome không có Live View.
+**Local (Chrome vs Steel self-host):** hai runtime ngang nhau về tốc độ, độ ổn định và chi phí, cả hai đều thành công 100%. Chrome nhẹ hơn rõ: khoảng 220 MB mỗi phiên, so với 530–880 MB mỗi container Steel. Steel self-host có hai điểm yếu:
+- Live View của image hiện tại bị lỗi. Đã tìm ra nguyên nhân, và vá 1 dòng trong server Steel thì gõ OTP qua Live View chạy được (mục 5).
+- Trang kiểm tra bot BrowserScan nhận ra nó là robot.
+
+Chrome không có Live View.
 
 **Cloud (Steel Cloud vs Browser Use Cloud vs Kernel):**
 - Steel Cloud nhanh nhất và rẻ nhất trong ba runtime cloud, nhưng **trượt bài giữ phiên 15 phút** vì gói miễn phí (Launch) giới hạn mỗi phiên 15 phút.
@@ -16,7 +20,12 @@ Các bảng số trong file này do `uv run python -m bench.runtime.report` tín
 
 **Theo thang điểm của hợp đồng (mục 10):** `chrome_local` đứng đầu với 87,4/100, `steel_selfhost` thứ hai với 74,1. Hai runtime cloud qua cổng loại đứng sau xa: Browser Use 39,0, Kernel 36,6. Khoảng cách giữa hai runtime đầu là 13 điểm, nhưng phần lớn đến từ RAM. Số RAM của Steel self-host đo cả container, nên bị đội lên (mục 4).
 - Nếu bỏ chỉ số RAM, Steel self-host nhỉnh hơn Chrome 2,2 điểm. Mức chênh này dưới 5 điểm, nên theo hợp đồng vẫn chọn runtime đơn giản hơn để vận hành, tức `chrome_local`.
-- Như vậy, tính cách nào thì `chrome_local` cũng đứng đầu. Quyết định cuối nằm ở `reports/DECISION.md` (M4), sau khi kiểm tra chéo với LLM thắng của Agent 2.
+- **Nếu chấp nhận vá Steel cho Live View chạy được:** Steel self-host được 84,1, Chrome vẫn 87,4. Chênh 3,3 điểm, nên theo hợp đồng vẫn chọn `chrome_local`.
+  - Nếu vừa vá vừa bỏ RAM, Steel self-host được 99,0, hơn Chrome 13,9 điểm, và thắng.
+  - Vì vậy kết quả phụ thuộc vào hai câu hỏi cho nhóm:
+    1. Có cần Live View cho khách không? Chrome không có, phải tự dựng.
+    2. Có chấp nhận tự vá và tự bảo trì image Steel không?
+- Quyết định cuối nằm ở `reports/DECISION.md` (M4), sau khi kiểm tra chéo với LLM thắng của Agent 2.
 
 **Lưu ý khi đọc số của cloud:** máy đo nằm xa trình duyệt cloud. Mỗi lệnh CDP giữa máy đo và trình duyệt cloud mất khoảng 240 ms, so với khoảng 2 ms khi chạy local (mục 3). Thời gian lượt đặt của cloud vì thế dài hơn local khoảng 2,5 lần. Phần lớn chênh lệch đó do khoảng cách mạng, không phải do bản thân trình duyệt. So sánh **giữa ba runtime cloud với nhau** vẫn công bằng, vì độ trễ của chúng gần bằng nhau (235–251 ms).
 
@@ -154,7 +163,10 @@ Vì phạm vi khác nhau, không so CPU giữa local và cloud.
 | `kernel` | có, gõ được vào ô OTP | 265 ms | 12 |
 <!-- /AUTO:liveview -->
 
-- Live View của `steel_selfhost` có URL, nhưng websocket `/v1/sessions/cast` không bắt tay được, nên khung xem không nhận hình nào. Cần một người thử tay để xác nhận (mục 9).
+- **Live View của `steel_selfhost`, image gốc** (`ghcr.io/steel-dev/steel-browser`, build 21/11/2026): khung xem không nhận hình nào. Bảng trên và bảng điểm chính thức dùng kết quả này.
+  - **Nguyên nhân là lỗi trong server Steel:** phần chia luồng websocket chỉ nhận đường `/v1/sessions/cast`, còn hàm xử lý lại tìm mã phiên trong đường `/v1/sessions/{id}/cast`. Hai phần không khớp nhau, nên lần nào cũng báo "Cast Session cast not found" rồi đóng kết nối.
+  - **Đã thử vá 1 dòng** trong `casting.handler.js` của container. Sau khi vá, gõ OTP qua Live View chạy được: 19 khung hình, trễ 3,6 ms vì chạy local. Kết quả lưu ở `results/runtime/liveview/steel_selfhost_serverpatch.json`.
+  - Khi dùng thật thì phải tự build image đã vá, hoặc chờ Steel sửa. Mục 8 có thêm bảng điểm cho phương án vá này.
 - `chrome_local` không có Live View sẵn. Muốn khách tự nhập OTP qua trình duyệt thì phải tự dựng thêm (ví dụ noVNC hoặc CDP screencast).
 
 ### Anti-bot
@@ -260,13 +272,31 @@ Mỗi chỉ số được quy về 0–100 trong nhóm, tốt nhất 100, kém n
 | `steel_cloud` | 40 | 84 | — | 0 | 100 | **57.7** |
 | `browser_use_cloud` | 0 | 64 | — | 7 | 100 | **35.3** |
 | `kernel` | 36 | 0 | — | 39 | 100 | **31.1** |
+
+**Phương án: `steel_selfhost` vá 1 dòng cho Live View (mục 5), runtime qua cổng loại**
+
+| Runtime | p95 lượt đặt (35) | $/1.000 (30) | RAM/phiên (15) | p95 cold start (10) | Live View (10) | Tổng /100 |
+|---|---|---|---|---|---|---|
+| `chrome_local` | 93 | 100 | 100 | 100 | 0 | **87.4** |
+| `steel_selfhost` | 100 | 100 | 0 | 91 | 100 | **84.1** |
+| `browser_use_cloud` | 0 | 64 | 65 | 0 | 100 | **39.0** |
+| `kernel` | 36 | 0 | 71 | 34 | 100 | **36.6** |
+
+**Phương án vá 1 dòng, bỏ RAM, runtime qua cổng loại** — tổng quy lại trên 85 điểm trọng số còn lại.
+
+| Runtime | p95 lượt đặt (35) | $/1.000 (30) | RAM/phiên (15) | p95 cold start (10) | Live View (10) | Tổng /100 |
+|---|---|---|---|---|---|---|
+| `steel_selfhost` | 100 | 100 | — | 91 | 100 | **99.0** |
+| `chrome_local` | 93 | 100 | — | 100 | 0 | **85.1** |
+| `browser_use_cloud` | 0 | 64 | — | 0 | 100 | **34.5** |
+| `kernel` | 36 | 0 | — | 34 | 100 | **30.6** |
 <!-- /AUTO:scores -->
 
 ## 9. Chưa kiểm chứng
 
 - **Thời gian cloud khi agent đặt cùng vùng với trình duyệt cloud.** Mọi số cloud ở đây đo từ một máy cách trình duyệt cloud khoảng 240 ms. Chạy thật trên server cùng vùng có thể nhanh hơn nhiều.
 - **Steel Cloud trên gói Scale.** Chưa thử bài giữ phiên với phiên dài 1 giờ.
-- **Live View của `steel_selfhost`.** Thử tự động thất bại, vì websocket không bắt tay được. Chưa có ai thử tay.
+- **Live View của `steel_selfhost` khi chạy thật.** Mới thử bản vá 1 dòng trên container local, chưa build thành image riêng. Cũng chưa kiểm tra bản Steel mới hơn đã sửa lỗi này chưa.
 - **RAM thật của trình duyệt cloud.** Không đo được, chỉ có số phía client.
 - **Chi phí local và self-host.** Đây là ước tính theo giá VPS, chưa chạy thật trên VPS. Cũng chưa đo Chrome headful dưới Xvfb trên Linux. Phải dùng headful, vì headless bị `s4_guarded` chặn.
 - **Anti-bot trên site thật.** `s4_guarded` là mock site. Kết quả trên Cloudflare Turnstile hay reCAPTCHA thật chưa biết.

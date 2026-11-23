@@ -309,15 +309,22 @@ def blk_scores(D):
     parts = []
     head = ["Runtime", "p95 lượt đặt (35)", "$/1.000 (30)", "RAM/phiên (15)", "p95 cold start (10)",
             "Live View (10)", "Tổng /100"]
-    for title, cands, use_ram in (
-        ("Chính thức (theo hợp đồng mục 10, chỉ runtime qua cổng loại)", passed, True),
-        ("Tham khảo: cả 5 runtime, bỏ qua cổng loại", RUNTIMES, True),
-        ("Tham khảo: cả 5 runtime, bỏ RAM (RAM cloud chỉ đo phía client nên không so được với local)", RUNTIMES, False),
-    ):
+    patched = RES / "liveview" / "steel_selfhost_serverpatch.json"
+    P = ({**D, "steel_selfhost": {**D["steel_selfhost"], "lv": json.loads(patched.read_text(encoding="utf-8"))}}
+         if patched.exists() else None)
+    variants = [
+        ("Chính thức (theo hợp đồng mục 10, chỉ runtime qua cổng loại)", D, passed, True),
+        ("Tham khảo: cả 5 runtime, bỏ qua cổng loại", D, RUNTIMES, True),
+        ("Tham khảo: cả 5 runtime, bỏ RAM (RAM cloud chỉ đo phía client nên không so được với local)", D, RUNTIMES, False),
+    ]
+    if P:
+        variants += [("Phương án: `steel_selfhost` vá 1 dòng cho Live View (mục 5), runtime qua cổng loại", P, passed, True),
+                     ("Phương án vá 1 dòng, bỏ RAM, runtime qua cổng loại", P, passed, False)]
+    for title, data, cands, use_ram in variants:
         if not cands:
             parts.append(f"**{title}:** không runtime nào qua cổng loại.")
             continue
-        S = scores(D, cands, use_ram)
+        S = scores(data, cands, use_ram)
         rows = [[f"`{rt}`"] + [f(S[rt].get(k), 0) if k in S[rt] else "—" for k in WEIGHTS] + [f"**{S[rt]['total']:.1f}**"]
                 for rt in sorted(cands, key=lambda r: -S[r]["total"])]
         parts.append(f"**{title}**" + (" — tổng quy lại trên 85 điểm trọng số còn lại." if not use_ram else "")

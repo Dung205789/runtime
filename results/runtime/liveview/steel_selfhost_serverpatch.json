@@ -1,0 +1,19 @@
+{
+ "runtime": "steel_selfhost",
+ "checked_at": "2026-11-23T15:18:27.150105+00:00",
+ "has_url": true,
+ "typed_ok": true,
+ "viewer_ws_frames": 19,
+ "viewer_console_errors": [],
+ "viewer_element": {
+  "tag": "CANVAS",
+  "x": 45.78125,
+  "y": 80,
+  "w": 1308.4375,
+  "h": 920
+ },
+ "typed_value": "4821",
+ "method": "bàn phím, ô OTP đã focus sẵn",
+ "input_latency_ms": 3.6,
+ "server_patch": "Image ghcr.io/steel-dev/steel-browser@sha256:70c88954... (build 2026-11-21): cast.handler chỉ nhận đường /v1/sessions/cast, còn casting.handler lại lấy id phiên từ /v1/sessions/{id}/cast nên luôn báo \"Cast Session cast not found\". Vá 1 dòng trong /app/api/build/plugins/browser-socket/casting.handler.js: if (!session || (session.id !== id && !id.startsWith(\"cast\"))) — rồi docker restart."
+}
