@@ -24,7 +24,9 @@ from playwright.async_api import async_playwright
 
 from bench.core.contract import BenchTask, RunRecord, append_record, load_tasks, machine_info, now_iso, site_url
 from bench.providers import ProviderSkipped, get_provider, lib_versions, site_url_for
-from bench.runtime.booking import LLMUnavailable, _check_released, run_booking
+from bench.runtime.booking import LLMTransient, LLMUnavailable, _check_released, run_booking
+
+NET_RETRIES, NET_WAIT_S = 5, 60  # mạng tới API LLM rớt: chờ rồi chạy lại lượt đó (giống run.py)
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results" / "runtime"
@@ -102,6 +104,7 @@ async def concurrent(rt: str, conc: int, runs: int, out: Path, already: int = 0,
     busy: set[str] = set()
     cond = asyncio.Condition()
     recs: list[RunRecord] = []
+    retries: dict[int, int] = {}
 
     async def worker() -> None:
         while True:
@@ -123,6 +126,16 @@ async def concurrent(rt: str, conc: int, runs: int, out: Path, already: int = 0,
                 except LLMUnavailable:
                     todo.clear()  # các worker khác không nhận lượt mới
                     raise
+                except LLMTransient as e:
+                    retries[i] = retries.get(i, 0) + 1
+                    if retries[i] > NET_RETRIES:
+                        todo.clear()
+                        raise LLMUnavailable(f"mạng tới API LLM rớt {retries[i]} lần liền: {e}") from e
+                    print(f"!!! c{conc} #{i}: mạng tới API LLM rớt; chờ {NET_WAIT_S} s rồi xếp lại lượt này", flush=True)
+                    await asyncio.sleep(NET_WAIT_S)
+                    async with cond:
+                        todo.insert(0, (i, t))
+                    continue
                 recs.append(rec)
                 print(f"c{conc} {rt:17s} #{i:<3d} {t.task_id} {rec.outcome:10s} t={(rec.total_ms or 0) / 1000:.0f}s "
                       f"peak={rec.peak_pss_mb}MB" + (f" | {rec.error[:120]}" if rec.error else ""), flush=True)

@@ -162,6 +162,27 @@ def up(n: int) -> int:
     return 0
 
 
+def fresh(i: int = 0, wait_s: float = 90) -> None:
+    """Xóa và tạo lại container i, chờ /v1/health. Dùng để mỗi lượt đo bắt đầu từ container mới."""
+    import time
+
+    api, cdp = container_ports(i)
+    name = f"{CONTAINER_PREFIX}{i}"
+    subprocess.call(["docker", "rm", "-f", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if subprocess.call(["docker", "run", "-d", "--name", name, "-p", f"{api}:3000", "-p", f"{cdp}:9223", IMAGE],
+                       stdout=subprocess.DEVNULL):
+        raise RuntimeError(f"không chạy được container {name}")
+    deadline = time.monotonic() + wait_s
+    while time.monotonic() < deadline:
+        try:
+            if httpx.get(f"http://localhost:{api}/v1/health", timeout=3).status_code == 200:
+                return
+        except httpx.HTTPError:
+            pass
+        time.sleep(1)
+    raise RuntimeError(f"container {name} không lên sau {wait_s:.0f} s")
+
+
 def down() -> int:
     names = subprocess.run(["docker", "ps", "-a", "--filter", f"name={CONTAINER_PREFIX}", "--format", "{{.Names}}"],
                            capture_output=True, text=True).stdout.split()

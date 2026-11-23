@@ -44,11 +44,20 @@ class LLMUnavailable(RuntimeError):
     """API LLM không dùng được (hết credit, sai key). Lượt đó KHÔNG được ghi; cả đợt đo phải dừng."""
 
 
+class LLMTransient(RuntimeError):
+    """Mạng tới API LLM rớt trước khi agent làm được bước nào. Lượt đó KHÔNG được ghi; nơi gọi chờ rồi chạy lại."""
+
+
 LLM_FATAL = ("credit balance is too low", "ModelQuotaExceeded", "authentication_error", "invalid x-api-key")
+LLM_NET = ("ModelConnectionError", "getaddrinfo failed", "ModelTimeoutError")
 
 
 def llm_fatal(text: str | None) -> bool:
     return bool(text) and any(s in text for s in LLM_FATAL)
+
+
+def llm_net_down(text: str | None, steps: int | None) -> bool:
+    return not steps and bool(text) and any(s in text for s in LLM_NET)
 
 
 def human_delay_s() -> float:
@@ -171,12 +180,16 @@ async def run_booking(provider: BrowserProvider, task: BenchTask, *, axis: str =
         if llm_fatal(rec.error) or (result is not None and llm_fatal(result.error)):
             raise LLMUnavailable(f"{provider.name} {task.task_id} rep{rep}: "
                                  + ((result.error if result is not None else None) or rec.error or "")[:300])
+        err = (result.error if result is not None else None) or rec.error
+        if llm_net_down(err, result.steps if result is not None else 0):
+            raise LLMTransient(f"{provider.name} {task.task_id} rep{rep}: {(err or '')[:200]}")
 
         rec.total_ms = round(session_s * 1000, 1)
         rec.human_wait_ms = round(human.wait_s * 1000, 1)
         rec.peak_pss_mb = round(sampler.peak_mb, 1) if sampler.peak_mb else None
         rec.cpu_s = sampler.cpu_s
         rec.machine["mem_scope"] = sampler.scope
+        rec.versions.update(getattr(sampler, "extra", {}))
         rec.browser_cost_usd = round(browser_cost(provider.name, session_s), 6)
         if task.needs_otp:
             rec.paused_for_otp = human.otp_given

@@ -2,7 +2,8 @@
 
 - **Đang làm:** M3 đã đo xong (2026-11-23). Đã viết `reports/runtime.md`, đang chờ người dùng duyệt để mở PR. M4 chờ Agent 2 xong M3.
 - **Kết quả M3, tóm tắt:**
-  - `chrome_local` 87,4/100, `steel_selfhost` 84,1. Chênh dưới 5 điểm, nên theo hợp đồng chọn `chrome_local`. Bỏ chỉ số RAM thì `steel_selfhost` được 99,1 và thắng.
+  - `chrome_local` 88,9/100, `steel_selfhost` 84,0. Chênh dưới 5 điểm, nên theo hợp đồng chọn `chrome_local`. Bỏ chỉ số RAM thì `steel_selfhost` được 98,8 và thắng.
+  - RAM của `steel_selfhost` đã đo lại, chỉ tính PSS của Chromium trong container: 350–530 MB, so với Chrome khoảng 220 MB. Số đo cũ theo `docker stats` lưu ở `results/runtime/archive/`.
   - Live View của `steel_selfhost` đã sửa.
     - Image gốc của Steel có lỗi. Provider giờ mặc định dùng image đã vá 1 dòng, `bench-steel-browser:liveview-fix`, build từ `bench/providers/steel_patch/Dockerfile`; `up()` tự build nếu chưa có.
     - Agent 2 nếu dùng `steel_selfhost` thì cần Docker để build lần đầu.

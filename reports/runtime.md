@@ -6,7 +6,7 @@ Các bảng số trong file này do `uv run python -m bench.runtime.report` tín
 
 ## 1. Tóm tắt
 
-**Local (Chrome vs Steel self-host):** hai runtime ngang nhau về tốc độ, độ ổn định và chi phí, cả hai đều thành công 100%. Chrome nhẹ hơn rõ: khoảng 220 MB mỗi phiên, so với 530–880 MB mỗi container Steel. Hai runtime khác nhau ở các điểm sau:
+**Local (Chrome vs Steel self-host):** hai runtime ngang nhau về tốc độ, độ ổn định và chi phí, cả hai đều thành công 100%. Chrome nhẹ hơn rõ. Đo cùng một cách (chỉ tính trình duyệt), Chrome khoảng 220 MB mỗi phiên, còn Chromium của Steel 350–530 MB. Tính cả container Steel thì khoảng 830 MB mỗi phiên. Hai runtime khác nhau ở các điểm sau:
 - **Live View:** Steel self-host có Live View gõ được. Image gốc của Steel bị lỗi, harness dùng image đã vá 1 dòng (mục 5). Chrome không có Live View.
 - **Anti-bot:** trang kiểm tra bot BrowserScan nhận ra Steel self-host là robot, còn Chrome qua.
 
@@ -16,9 +16,9 @@ Các bảng số trong file này do `uv run python -m bench.runtime.report` tín
 - Browser Use Cloud chậm nhất và có 1 lượt bị chặn trên site chống bot.
 - Cả ba runtime cloud đều có Live View gõ được.
 
-**Theo thang điểm của hợp đồng (mục 10):** `chrome_local` đứng đầu với 87,4/100, `steel_selfhost` thứ hai với 84,1. Hai runtime cloud qua cổng loại đứng sau xa: Browser Use 39,0, Kernel 36,6.
-- Hai runtime đầu chênh 3,3 điểm, dưới ngưỡng 5 điểm. Theo hợp đồng thì chọn runtime đơn giản hơn để vận hành, tức `chrome_local`.
-- Steel self-host thua chủ yếu ở RAM. Số RAM của nó đo cả container, nên bị đội lên (mục 4). Nếu bỏ chỉ số RAM, Steel self-host được 99,1, hơn Chrome 14 điểm, và thắng.
+**Theo thang điểm của hợp đồng (mục 10):** `chrome_local` đứng đầu với 88,9/100, `steel_selfhost` thứ hai với 84,0. Hai runtime cloud qua cổng loại đứng sau xa: Browser Use 39,0, Kernel 36,6.
+- Hai runtime đầu chênh 4,9 điểm, sát ngưỡng 5 điểm. Theo hợp đồng thì chọn runtime đơn giản hơn để vận hành, tức `chrome_local`.
+- Steel self-host thua ở RAM. Kết quả này vẫn giữ sau khi đo lại công bằng, chỉ tính trình duyệt (mục 4). Nếu bỏ chỉ số RAM, Steel self-host được 98,8, hơn Chrome khoảng 12 điểm, và thắng nhờ Live View.
 - Vì vậy cần nhóm trả lời hai câu hỏi:
   1. Có cần Live View cho khách gõ OTP không? Chrome không có sẵn, phải tự dựng.
   2. Có chấp nhận dùng image Steel tự vá không? Bản vá chỉ 1 dòng, nhưng phải giữ cho tới khi Steel sửa lỗi.
@@ -49,14 +49,14 @@ Các bảng số trong file này do `uv run python -m bench.runtime.report` tín
 | Runtime | Success (1 phiên) | Lượt đặt p50 | Lượt đặt p95 | Bước p50 | Tạo phiên p50 | Tạo phiên p95 | Cold start p50 | Cold start p95 |
 |---|---|---|---|---|---|---|---|---|
 | `chrome_local` | 100/100 | 22 s | 37 s | 10 | 0.40 s | 0.43 s | 0.55 s | 0.63 s |
-| `steel_selfhost` | 100/100 | 22 s | 31 s | 10 | 0.78 s | 0.81 s | 0.97 s | 1.00 s |
+| `steel_selfhost` | 100/100 | 26 s | 35 s | 10 | 0.78 s | 0.81 s | 0.97 s | 1.00 s |
 | `steel_cloud` | 100/100 | 56 s | 76 s | 10 | 0.82 s | 1.98 s | 3.31 s | 5.32 s |
 | `browser_use_cloud` | 99/100 | 71 s | 106 s | 11 | 1.26 s | 1.37 s | 4.69 s | 5.01 s |
 | `kernel` | 100/100 | 57 s | 79 s | 10 | 0.95 s | 0.99 s | 3.37 s | 3.52 s |
 <!-- /AUTO:time -->
 
 - **Cold start** là thời gian từ lúc tạo phiên đến khi trang đầu tải xong. Local dưới 1 s. Cloud 3–5 s, trong đó phần lớn là tải trang qua tunnel.
-- Hai runtime local cùng khoảng 22 s mỗi lượt. Ba runtime cloud mất 56–71 s, dù số bước của agent gần như nhau (10–11 bước).
+- Hai runtime local mất 22–26 s mỗi lượt. Steel self-host chậm hơn khoảng 4 s ở p50, có thể vì mỗi lượt khởi động trên một container mới. Ở p95 thì Steel lại nhanh hơn (35 s so với 37 s). Ba runtime cloud mất 56–71 s, dù số bước của agent gần như nhau (10–11 bước).
 
 **Độ trễ mạng, đo riêng để giải thích chênh lệch:**
 
@@ -64,7 +64,7 @@ Các bảng số trong file này do `uv run python -m bench.runtime.report` tín
 | Runtime | CDP máy đo ↔ trình duyệt, ms (p50 / p95) | Trình duyệt → mock site, TTFB ms (p50 / p95) | Đường tới mock site | Lượt đặt p50 (để đối chiếu) |
 |---|---|---|---|---|
 | `chrome_local` | 2 / 5 | 1 / 2 | localhost | 22 s |
-| `steel_selfhost` | 2 / 2 | 2 / 2 | localhost | 22 s |
+| `steel_selfhost` | 2 / 2 | 2 / 2 | localhost | 26 s |
 | `steel_cloud` | 235 / 242 | 264 / 441 | qua tunnel | 56 s |
 | `browser_use_cloud` | 251 / 316 | 270 / 556 | qua tunnel | 71 s |
 | `kernel` | 243 / 267 | 265 / 586 | qua tunnel | 57 s |
@@ -82,7 +82,7 @@ Thời gian p50 theo từng task, đơn vị giây:
 | Runtime (giây, p50) | t01 | t02 | t03 | t04 | t05 | t06 | t07 | t08 | t09 | t10 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `chrome_local` | 17 | 17 | 22 | 19 | 34 | 31 | 20 | 19 | 30 | 22 |
-| `steel_selfhost` | 18 | 20 | 20 | 22 | 24 | 29 | 20 | 22 | 26 | 26 |
+| `steel_selfhost` | 22 | 21 | 24 | 25 | 31 | 33 | 24 | 24 | 30 | 26 |
 | `steel_cloud` | 54 | 59 | 52 | 48 | 53 | 53 | 60 | 55 | 62 | 72 |
 | `browser_use_cloud` | 76 | 81 | 67 | 66 | 48 | 62 | 55 | 84 | 92 | 89 |
 | `kernel` | 49 | 59 | 50 | 49 | 53 | 58 | 56 | 59 | 70 | 66 |
@@ -93,8 +93,8 @@ Thời gian p50 theo từng task, đơn vị giây:
 <!-- AUTO:resources -->
 | Runtime | RAM đỉnh MB, 1 phiên (p50 / p95) | 3 song song | 5 song song | CPU p50 / lượt | Đo cái gì |
 |---|---|---|---|---|---|
-| `chrome_local` | 218 / 227 | 215 / 225 | 184 / 230 | 7.2 s | cây tiến trình Chrome pid 29480 |
-| `steel_selfhost` | 868 / 879 | 531 / 548 | 545 / 562 | — | docker stats của container bench-steel-0 |
+| `chrome_local` | 218 / 227 | 215 / 225 | 184 / 230 | 7.2 s | USS cây tiến trình Chrome của phiên |
+| `steel_selfhost` | 531 / 538 | 403 / 424 | 348 / 359 | 4.5 s | PSS các tiến trình Chromium trong container (cả container, có Node.js: p50 832 MB) |
 | `steel_cloud` | 417 / 428 | 535 / 571 | 675 / 676 | 7.2 s | phía client: Python harness + tiến trình con |
 | `browser_use_cloud` | 420 / 455 | 524 / 557 | 665 / 696 | 11.0 s | phía client: Python harness + tiến trình con |
 | `kernel` | 404 / 418 | 539 / 552 | 689 / 693 | 7.6 s | phía client: Python harness + tiến trình con |
@@ -102,21 +102,25 @@ Thời gian p50 theo từng task, đơn vị giây:
 
 **RAM của trình duyệt chỉ đo được ở local.**
 - `chrome_local` đo USS của cả cây tiến trình Chrome của phiên. Windows không có PSS, nên dùng USS theo brief.
-- `steel_selfhost` dùng số của `docker stats`: tính cả server API Node.js của Steel và page cache trong container, không chỉ Chrome.
-  - Ở mức 1 phiên, container chạy liên tục qua 110 lượt, đo được khoảng 870 MB.
-  - Ở mức 3 và 5 phiên, mỗi phiên dùng một container mới, mỗi container khoảng 530–560 MB.
-  - Steel self-host chỉ giữ được 1 phiên mỗi container, nên N phiên cần N container.
+- `steel_selfhost` đo PSS của riêng các tiến trình Chromium trong container, không tính server Node.js, nginx và page cache. Như vậy cùng phạm vi với Chrome local.
+  - Ở mức 1 phiên, mỗi lượt dùng một container mới. Ở mức 3 và 5 phiên, cả loạt container được tạo mới ở đầu bước, rồi mỗi container phục vụ nhiều lượt liền.
+  - Chromium của Steel nặng hơn Chrome local:
+    - Lượt đầu trên container mới: khoảng 530 MB.
+    - Các lượt sau trên cùng container: 350–420 MB.
+    - Chrome local: khoảng 220 MB.
+  - Cả container (thêm Node.js của Steel) khoảng 830 MB mỗi phiên. Steel self-host chỉ giữ được 1 phiên mỗi container, nên N phiên cần N container, tức cần khoảng N × 830 MB.
+  - Chênh USS/PSS: Chrome local đo USS trên Windows, Steel đo PSS trên Linux. PSS lớn hơn USS một ít, do có tính phần thư viện dùng chung. Khoảng chênh này nhỏ hơn nhiều so với mức chênh 130–310 MB ở trên.
+  - Lần đo đầu dùng `docker stats` cho cả container, nên bị đội lên (khoảng 870 MB). Số cũ lưu ở `results/runtime/archive/`. Lượt đặt bàn, chạy 3 phiên và 5 phiên song song của Steel self-host đã đo lại toàn bộ theo cách mới. Cách cũ vẫn chạy được bằng `BENCH_STEEL_MEM=docker_stats`.
 
 **Cloud chỉ đo được phía client:** tiến trình Python của harness cùng các tiến trình con. Không có số RAM của trình duyệt trên cloud.
 - Ở mức 3 và 5 phiên, các phiên dùng chung một tiến trình Python. Số đo khi đó là tổng của cả tiến trình, không phải RAM mỗi phiên.
 - Vì vậy không so RAM cloud với RAM local được. Hợp đồng vẫn chấm điểm RAM cloud theo số phía client, và điều này có lợi cho cloud. Mục 8 có thêm một bảng điểm bỏ RAM để đối chiếu.
 
 **CPU:** phạm vi đo khác nhau giữa các runtime.
-- `chrome_local`: đo CPU của Chrome, khoảng 7 s mỗi lượt.
-- Ba runtime cloud: đo CPU của harness phía client. Steel Cloud và Kernel khoảng 7 s, Browser Use khoảng 11 s.
-- Steel self-host bỏ trống, vì `docker stats` không cho tổng thời gian CPU.
+- `chrome_local` đo CPU của Chrome, khoảng 7 s mỗi lượt. `steel_selfhost` đo CPU của Chromium trong container, khoảng 4,5 s.
+- Ba runtime cloud đo CPU của harness phía client: Steel Cloud và Kernel khoảng 7 s, Browser Use khoảng 11 s.
 
-Vì phạm vi khác nhau, không so CPU giữa local và cloud.
+Vì phạm vi khác nhau, không so CPU giữa local và cloud. Cũng chỉ nên so CPU giữa Chrome và Steel ở mức đại khái: một bên chạy Windows có giao diện, một bên chạy Linux trong container.
 
 ## 5. Khả dụng
 
@@ -126,7 +130,7 @@ Vì phạm vi khác nhau, không so CPU giữa local và cloud.
 | Runtime | 3 song song: success | phiên mất (crashed) | timeout | 5 song song: success | Lượt p50 ở 3 song song | ở 5 song song | Mồ côi sau stop() / số lần kiểm |
 |---|---|---|---|---|---|---|---|
 | `chrome_local` | 50/50 | 0 | 0 | 10/10 | 22 s | 26 s | 0 / 182 |
-| `steel_selfhost` | 50/50 | 0 | 0 | 10/10 | 23 s | 24 s | 0 / 182 |
+| `steel_selfhost` | 50/50 | 0 | 0 | 10/10 | 25 s | 27 s | 0 / 182 |
 | `steel_cloud` | 50/50 | 0 | 0 | 10/10 | 54 s | 58 s | 0 / 182 |
 | `browser_use_cloud` | 50/50 | 0 | 0 | 10/10 | 68 s | 95 s | 0 / 182 |
 | `kernel` | 50/50 | 0 | 0 | 10/10 | 57 s | 75 s | 0 / 182 |
@@ -193,7 +197,7 @@ Vì phạm vi khác nhau, không so CPU giữa local và cloud.
 | Runtime | Phiên p50 (gồm chờ OTP) | LLM / 1.000 lượt | Trình duyệt / 1.000 lượt | Tổng / 1.000 lượt | Nguồn giá trình duyệt | Token đọc từ prompt cache |
 |---|---|---|---|---|---|---|
 | `chrome_local` | 23 s | 3.58 $ | 0.07 $ | 3.64 $ | ước tính: Hetzner CX23 (2 vCPU, 4 GB, €0.0096/giờ) | 88% |
-| `steel_selfhost` | 23 s | 3.56 $ | 0.07 $ | 3.62 $ | ước tính: Hetzner CX23 (2 vCPU, 4 GB, €0.0096/giờ) | 88% |
+| `steel_selfhost` | 26 s | 3.62 $ | 0.08 $ | 3.70 $ | ước tính: Hetzner CX23 (2 vCPU, 4 GB, €0.0096/giờ) | 88% |
 | `steel_cloud` | 57 s | 3.37 $ | 1.71 $ | 5.07 $ | giá dịch vụ (prices.toml) | 88% |
 | `browser_use_cloud` | 72 s | 4.99 $ | 1.82 $ | 6.81 $ | giá dịch vụ (prices.toml) | 88% |
 | `kernel` | 57 s | 4.33 $ | 8.22 $ | 12.55 $ | giá dịch vụ (prices.toml) | 85% |
@@ -249,30 +253,30 @@ Mỗi chỉ số được quy về 0–100 trong nhóm, tốt nhất 100, kém n
 
 | Runtime | p95 lượt đặt (35) | $/1.000 (30) | RAM/phiên (15) | p95 cold start (10) | Live View (10) | Tổng /100 |
 |---|---|---|---|---|---|---|
-| `chrome_local` | 93 | 100 | 100 | 100 | 0 | **87.4** |
-| `steel_selfhost` | 100 | 100 | 0 | 91 | 100 | **84.1** |
-| `browser_use_cloud` | 0 | 64 | 65 | 0 | 100 | **39.0** |
-| `kernel` | 36 | 0 | 71 | 34 | 100 | **36.6** |
+| `chrome_local` | 97 | 100 | 100 | 100 | 0 | **88.9** |
+| `steel_selfhost` | 100 | 99 | 0 | 91 | 100 | **84.0** |
+| `browser_use_cloud` | 0 | 64 | 27 | 0 | 100 | **33.3** |
+| `kernel` | 38 | 0 | 38 | 34 | 100 | **32.4** |
 
 **Tham khảo: cả 5 runtime, bỏ qua cổng loại**
 
 | Runtime | p95 lượt đặt (35) | $/1.000 (30) | RAM/phiên (15) | p95 cold start (10) | Live View (10) | Tổng /100 |
 |---|---|---|---|---|---|---|
-| `chrome_local` | 93 | 100 | 100 | 100 | 0 | **87.4** |
-| `steel_selfhost` | 100 | 100 | 0 | 92 | 100 | **84.2** |
-| `steel_cloud` | 40 | 84 | 69 | 0 | 100 | **59.4** |
-| `browser_use_cloud` | 0 | 64 | 65 | 7 | 100 | **39.7** |
-| `kernel` | 36 | 0 | 71 | 39 | 100 | **37.1** |
+| `chrome_local` | 97 | 100 | 100 | 100 | 0 | **88.9** |
+| `steel_selfhost` | 100 | 99 | 0 | 92 | 100 | **84.0** |
+| `steel_cloud` | 42 | 84 | 35 | 0 | 100 | **55.0** |
+| `browser_use_cloud` | 0 | 64 | 27 | 7 | 100 | **34.0** |
+| `kernel` | 38 | 0 | 38 | 39 | 100 | **32.8** |
 
 **Tham khảo: cả 5 runtime, bỏ RAM (RAM cloud chỉ đo phía client nên không so được với local)** — tổng quy lại trên 85 điểm trọng số còn lại.
 
 | Runtime | p95 lượt đặt (35) | $/1.000 (30) | RAM/phiên (15) | p95 cold start (10) | Live View (10) | Tổng /100 |
 |---|---|---|---|---|---|---|
-| `steel_selfhost` | 100 | 100 | — | 92 | 100 | **99.1** |
-| `chrome_local` | 93 | 100 | — | 100 | 0 | **85.1** |
-| `steel_cloud` | 40 | 84 | — | 0 | 100 | **57.7** |
+| `steel_selfhost` | 100 | 99 | — | 92 | 100 | **98.8** |
+| `chrome_local` | 97 | 100 | — | 100 | 0 | **86.9** |
+| `steel_cloud` | 42 | 84 | — | 0 | 100 | **58.5** |
 | `browser_use_cloud` | 0 | 64 | — | 7 | 100 | **35.3** |
-| `kernel` | 36 | 0 | — | 39 | 100 | **31.1** |
+| `kernel` | 38 | 0 | — | 39 | 100 | **31.8** |
 <!-- /AUTO:scores -->
 
 ## 9. Chưa kiểm chứng

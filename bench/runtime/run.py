@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import socket
 import statistics
 import subprocess
@@ -34,7 +35,7 @@ import httpx
 from bench.core.contract import REPS_PER_CELL, SITE_PORTS, load_tasks
 from bench.providers import CLOUD, PUBLIC_URLS_FILE, RUNTIMES, ProviderSkipped, get_provider
 from bench.runtime import phases
-from bench.runtime.booking import LLMUnavailable, run_booking
+from bench.runtime.booking import LLMTransient, LLMUnavailable, run_booking
 from bench.runtime.llm import preflight
 from dotenv import load_dotenv
 
@@ -43,6 +44,7 @@ RESULTS = ROOT / "results" / "runtime"
 ORDER = ["cold", "booking", "c3", "c5", "hold", "antibot", "liveview"]
 CONC = {"c3": (3, 50), "c5": (5, 10)}
 LLM_PHASES = {"pilot", "booking", "c3", "c5", "hold"}
+NET_RETRIES, NET_WAIT_S = 5, 60  # mạng tới API LLM rớt: chờ rồi chạy lại lượt đó, tối đa 5 lần
 
 
 def port_open(port: int) -> bool:
@@ -156,14 +158,26 @@ def line(rec) -> str:
 
 async def booking_phase(rt: str, task_ids, reps: int, out: Path) -> list:
     tasks = [t for t in load_tasks(ROOT / "tasks" / "tasks.json") if not task_ids or t.task_id in task_ids]
-    done = Counter((r["task_id"]) for r in load(out) if r["provider"] == rt and r["concurrency"] == 1)
+    done = {(r["task_id"], r["rep"]) for r in load(out) if r["provider"] == rt and r["concurrency"] == 1}
     provider = get_provider(rt)
     recs = []
     for rep in range(reps):
         for t in tasks:
-            if done[t.task_id] > rep:
+            if (t.task_id, rep) in done:  # resume theo đúng (task, lượt): lượt bị gỡ ra sẽ được chạy lại đúng số lượt
                 continue
-            rec = await run_booking(provider, t, rep=rep, warmup=(rep == 0 and reps > 1), out=out)
+            for attempt in range(NET_RETRIES + 1):
+                if rt == "steel_selfhost" and os.environ.get("BENCH_STEEL_FRESH", "1") == "1":
+                    from bench.providers.steel_selfhost import fresh  # mỗi lượt một container mới (đo RAM sạch)
+
+                    await asyncio.to_thread(fresh, 0)
+                try:
+                    rec = await run_booking(provider, t, rep=rep, warmup=(rep == 0 and reps > 1), out=out)
+                    break
+                except LLMTransient as e:
+                    if attempt == NET_RETRIES:
+                        raise LLMUnavailable(f"mạng tới API LLM rớt {NET_RETRIES + 1} lần liền: {e}") from e
+                    print(f"!!! mạng tới API LLM rớt ({e}); chờ {NET_WAIT_S} s rồi chạy lại lượt này", flush=True)
+                    await asyncio.sleep(NET_WAIT_S)
             recs.append(rec)
             print(line(rec), flush=True)
     return recs
@@ -186,7 +200,12 @@ async def run_phase(phase: str, rt: str, infra: Infra, a) -> None:
         done = len([r for r in rows if r["concurrency"] == conc])
         if done < runs:
             provider = None
-            if rt == "steel_selfhost":  # 1 phiên = 1 container
+            if rt == "steel_selfhost":  # 1 phiên = 1 container; tạo mới cả loạt ở đầu phase
+                if os.environ.get("BENCH_STEEL_FRESH", "1") == "1":
+                    from bench.providers.steel_selfhost import fresh
+
+                    for i in range(conc):
+                        await asyncio.to_thread(fresh, i)
                 infra.steel_containers(conc)
                 from bench.providers.steel_selfhost import container_ports
 
