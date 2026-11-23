@@ -1,0 +1,12 @@
+{
+ "runtime": "kernel",
+ "page": "nowsecure",
+ "url": "https://nowsecure.nl",
+ "checked_at": "2026-11-23T14:38:51.801087+00:00",
+ "http_status": 200,
+ "title": "nowsecure.nl",
+ "text": "NOWSECURE\nBY NODRIVER\nNOWSECURE\nBY NODRIVER",
+ "webdriver": false,
+ "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+ "screenshot": "results/runtime/antibot/kernel_nowsecure.png"
+}

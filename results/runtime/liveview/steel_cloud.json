@@ -1,0 +1,18 @@
+{
+ "runtime": "steel_cloud",
+ "checked_at": "2026-11-23T03:21:52.956164+00:00",
+ "has_url": true,
+ "typed_ok": true,
+ "viewer_ws_frames": 2,
+ "viewer_console_errors": [],
+ "viewer_element": {
+  "tag": "CANVAS",
+  "x": 0,
+  "y": 7.8125,
+  "w": 1400,
+  "h": 984.375
+ },
+ "typed_value": "4821",
+ "method": "bấm vào vị trí ô OTP trên khung xem rồi gõ",
+ "input_latency_ms": 235.2
+}

@@ -1,0 +1,12 @@
+{
+ "runtime": "chrome_local",
+ "page": "nowsecure",
+ "url": "https://nowsecure.nl",
+ "checked_at": "2026-11-23T03:16:18.439979+00:00",
+ "http_status": 200,
+ "title": "nowsecure.nl",
+ "text": "NOWSECURE\nBY NODRIVER\nNOWSECURE\nBY NODRIVER",
+ "webdriver": false,
+ "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36",
+ "screenshot": "results/runtime/antibot/chrome_local_nowsecure.png"
+}
