@@ -1,6 +1,13 @@
 # Trạng thái — Agent 1 (Runtime)
 
-- **Đang làm:** M3: đang chạy toàn bộ ma trận đo (`uv run python -m bench.runtime.run all`, bắt đầu 2026-11-23), ước tính 8–10 giờ. Pilot 10/10 `success` trên chrome_local, chi phí LLM trung vị $0.0036/lượt.
+- **Đang làm:** M3 đã đo xong (2026-11-23). Đã viết `reports/runtime.md`, đang chờ người dùng duyệt để mở PR. M4 chờ Agent 2 xong M3.
+- **Kết quả M3, tóm tắt:**
+  - `chrome_local` 87,4/100, `steel_selfhost` 84,1. Chênh dưới 5 điểm, nên theo hợp đồng chọn `chrome_local`. Bỏ chỉ số RAM thì `steel_selfhost` được 99,1 và thắng.
+  - Live View của `steel_selfhost` đã sửa.
+    - Image gốc của Steel có lỗi. Provider giờ mặc định dùng image đã vá 1 dòng, `bench-steel-browser:liveview-fix`, build từ `bench/providers/steel_patch/Dockerfile`; `up()` tự build nếu chưa có.
+    - Agent 2 nếu dùng `steel_selfhost` thì cần Docker để build lần đầu.
+  - `steel_cloud` trượt cổng giữ phiên 15 phút do gói Launch.
+  - Bảng số tính lại bằng `uv run python -m bench.runtime.report`.
 - **Mốc đã xong:**
   - M1: 5 mock site trong `mock_sites/`, `uv run python -m mock_sites.serve`, kiểm tra `uv run python -m mock_sites.verify` đạt 15/15 (10/10 task `success`, s4 chặn Chromium headless mặc định). Có `mock_sites/READY`.
   - M2: `bench/providers/` có 5 runtime và `get_provider()`. Kiểm tra `uv run python -m bench.providers.check`:
@@ -8,6 +15,9 @@
     - `steel_selfhost` đạt, đã kiểm chứng trên container thật: browser-use nối CDP được, mở mock site qua `host.docker.internal`. **Mỗi container chỉ giữ 1 phiên**, nên N phiên song song cần N container (`up N`, `STEEL_SELFHOST_N=N`). Đã thử 3 phiên trên 3 container.
     - `steel_cloud`, `browser_use_cloud`, `kernel` đạt: tạo phiên, browser-use nối CDP, mở mock site qua tunnel, qua được JS challenge của s4.
     - Tunnel: `uv run python -m mock_sites.tunnel` (Cloudflare Quick Tunnel), `site_url_for()` tự đọc URL. Qua tunnel thì `/_bench/*` bị chặn.
+  - M3 (chưa merge): đã đo đủ 5 runtime, 910 lượt.
+    - Code đo: `bench/runtime/` (`run`, `latency`, `report`).
+    - Dữ liệu: `results/runtime/`. Báo cáo: `reports/runtime.md`.
   - M1 và M2 được merge vào `main` trong cùng một PR. Code đo của M3 (`bench/runtime/`) sẽ vào PR M3, cùng `results/runtime/` và `reports/runtime.md`.
 - **Bị chặn bởi:** không có.
 - **Agent 2 cần biết:**

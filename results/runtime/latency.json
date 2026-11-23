@@ -1,0 +1,137 @@
+{
+ "checked_at": "2026-11-23T15:04:23.812811+00:00",
+ "machine": {
+  "os": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cores": 12,
+  "ram_gb": 31.3,
+  "python": "3.13.14",
+  "host": ""
+ },
+ "versions": {
+  "browser-use": "1.0.8",
+  "playwright": "1.65.2",
+  "httpx": "0.28.1"
+ },
+ "runtimes": {
+  "chrome_local": {
+   "cdp_rtt": {
+    "n": 20,
+    "p50_ms": 2.2,
+    "p95_ms": 5.4,
+    "min_ms": 1.2
+   },
+   "site_ttfb_from_browser": {
+    "n": 10,
+    "p50_ms": 1.2,
+    "p95_ms": 1.5,
+    "min_ms": 0.8
+   },
+   "goto_from_harness": {
+    "n": 10,
+    "p50_ms": 36.1,
+    "p95_ms": 101.0,
+    "min_ms": 29.6
+   },
+   "via_tunnel": false
+  },
+  "steel_selfhost": {
+   "cdp_rtt": {
+    "n": 20,
+    "p50_ms": 1.9,
+    "p95_ms": 2.3,
+    "min_ms": 1.4
+   },
+   "site_ttfb_from_browser": {
+    "n": 10,
+    "p50_ms": 1.8,
+    "p95_ms": 2.4,
+    "min_ms": 1.6
+   },
+   "goto_from_harness": {
+    "n": 10,
+    "p50_ms": 82.6,
+    "p95_ms": 137.3,
+    "min_ms": 69.0
+   },
+   "via_tunnel": false
+  },
+  "steel_cloud": {
+   "cdp_rtt": {
+    "n": 20,
+    "p50_ms": 235.0,
+    "p95_ms": 242.4,
+    "min_ms": 233.5
+   },
+   "site_ttfb_from_browser": {
+    "n": 10,
+    "p50_ms": 263.6,
+    "p95_ms": 440.8,
+    "min_ms": 251.2
+   },
+   "goto_from_harness": {
+    "n": 10,
+    "p50_ms": 547.9,
+    "p95_ms": 837.9,
+    "min_ms": 527.2
+   },
+   "via_tunnel": true
+  },
+  "browser_use_cloud": {
+   "cdp_rtt": {
+    "n": 20,
+    "p50_ms": 251.3,
+    "p95_ms": 316.5,
+    "min_ms": 244.6
+   },
+   "site_ttfb_from_browser": {
+    "n": 10,
+    "p50_ms": 269.5,
+    "p95_ms": 556.1,
+    "min_ms": 250.9
+   },
+   "goto_from_harness": {
+    "n": 10,
+    "p50_ms": 556.1,
+    "p95_ms": 926.0,
+    "min_ms": 527.6
+   },
+   "via_tunnel": true
+  },
+  "kernel": {
+   "cdp_rtt": {
+    "n": 20,
+    "p50_ms": 243.0,
+    "p95_ms": 267.4,
+    "min_ms": 238.2
+   },
+   "site_ttfb_from_browser": {
+    "n": 10,
+    "p50_ms": 265.4,
+    "p95_ms": 586.4,
+    "min_ms": 256.4
+   },
+   "goto_from_harness": {
+    "n": 10,
+    "p50_ms": 565.1,
+    "p95_ms": 934.9,
+    "min_ms": 552.6
+   },
+   "via_tunnel": true
+  }
+ },
+ "harness_http": {
+  "localhost": {
+   "n": 20,
+   "p50_ms": 1.2,
+   "p95_ms": 1.5,
+   "min_ms": 0.9
+  },
+  "qua_tunnel": {
+   "n": 20,
+   "p50_ms": 107.2,
+   "p95_ms": 180.2,
+   "min_ms": 78.1
+  }
+ }
+}

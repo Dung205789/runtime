@@ -1,0 +1,20 @@
+{
+ "runtime": "browser_use_cloud",
+ "checked_at": "2026-11-23T03:22:36.253869+00:00",
+ "has_url": true,
+ "typed_ok": true,
+ "viewer_ws_frames": 37,
+ "viewer_console_errors": [
+  "Failed to load resource: the server responded with a status of 404 ()"
+ ],
+ "viewer_element": {
+  "tag": "IMG",
+  "x": 4,
+  "y": 88,
+  "w": 1392,
+  "h": 700.34375
+ },
+ "typed_value": "4821",
+ "method": "bấm vào vị trí ô OTP trên khung xem rồi gõ",
+ "input_latency_ms": 234.8
+}
