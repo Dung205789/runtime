@@ -15,6 +15,8 @@ Mọi thứ trong file này **đã chốt**. Không agent nào tự sửa. Cần
 - Khóa API để trong `.env` (mẫu ở `.env.example`). Không hard-code khóa, không commit `.env`.
 - Thiếu khóa của một ứng viên thì ghi `outcome = "skipped"` kèm lý do. **Không bịa số.**
 - Mỗi file kết quả ghi cấu hình máy đo (CPU, RAM, OS) qua `machine_info()` trong `bench/core/contract.py`.
+- **Bắt buộc đặt `ANONYMIZED_TELEMETRY=false`** khi đo bằng browser-use. Nếu để telemetry bật, mỗi lượt bị cộng thêm khoảng 70 giây (đã đo, xem `docs/CHANGES.md`).
+- browser-use 1.0.8: phải truyền `Agent(..., judge=False)` và `Browser(cdp_url=...)`. Nếu để mặc định, thư viện sẽ mở browser trên Browser Use Cloud và gọi thêm một lượt LLM để tự chấm. Cả hai đều mất tiền và làm sai số đo.
 
 ## 2. Phân quyền thư mục
 
@@ -64,7 +66,7 @@ Không chạy lặp trên web nhà hàng thật, vì sẽ tạo đơn rác. Đo 
 
 - `POST /_bench/reset`: xóa sạch đơn đã nhận.
 - `GET /_bench/bookings`: trả danh sách đơn dạng JSON `[{date, time, party_size, name, phone, created_at}]`.
-- `GET /_bench/otp`: trả OTP hiện tại (chỉ `s5_otp`).
+- `GET /_bench/otp`: trả về `{"otp": "123456"}`. Nếu chưa có OTP thì trả `{"otp": null}`. Chỉ `s5_otp` có endpoint này.
 
 **Chấm kết quả** (do harness làm, không để LLM tự báo):
 
@@ -88,7 +90,7 @@ Ngoài mock site, Agent 1 đo anti-bot **chỉ đọc, không submit** trên 3 t
 |---|---|
 | `none` | Profile trắng, agent không có gì lưu sẵn. Đây là "chưa cache" |
 | `session` | Dùng lại `storage_state` (cookie, localStorage) từ một lượt thành công trước đó |
-| `actions` | Chạy lại lịch sử action đã ghi từ lượt thành công. Chỉ gọi LLM khi bước chạy lại bị lỗi |
+| `actions` | Lấy code Python của một lượt `none` đã thành công (cùng site, khác task) đưa vào làm gợi ý. LLM vẫn chạy nhưng cần ít bước hơn. Không dùng cơ chế chạy lại lịch sử vì browser-use 1.0 đã bỏ nó; chi tiết ở `docs/CHANGES.md` |
 
 **Prompt cache của API** luôn **bật** ở mọi cấu hình, vì thực tế sẽ dùng như vậy. Ghi riêng các cột `tokens_cache_read` / `tokens_cache_write`. Đây không phải `cache_mode`.
 
@@ -98,7 +100,7 @@ Ngoài mock site, Agent 1 đo anti-bot **chỉ đọc, không submit** trên 3 t
 - Báo **p50 và p95**, không báo trung bình đơn thuần.
 - Chi phí tính trên **lượt thành công**: `$/success = tổng chi phí mọi lượt ÷ số lượt success`.
 - Giới hạn mỗi lượt: tối đa 40 bước, tối đa 300 giây (không tính thời gian chờ người). Vượt giới hạn thì `timeout`.
-- Ngân sách LLM: mỗi model tối đa **$25** cho toàn bộ đợt đo. Chạm trần thì dừng và ghi lại đã chạy được bao nhiêu ô.
+- Ngân sách LLM: hiện chỉ có **$1,80 cho toàn bộ trục LLM**, đặt bằng biến `BENCH_LLM_BUDGET_USD`. Ma trận đã được rút gọn, xem `docs/CHANGES.md`. Chạm trần thì dừng, và ghi lại đã chạy được bao nhiêu ô.
 - Giá lấy từ trang chính thức, ghi vào `bench/core/prices.toml` kèm ngày tra và URL nguồn. Agent 1 ghi giá runtime, Agent 2 ghi giá LLM.
 
 ## 9. Log

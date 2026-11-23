@@ -16,6 +16,32 @@ Mỗi mốc ứng với 1 PR vào `main` và 1 lần cập nhật `docs/status/a
 | **M2** | Harness chạy được 1 lượt hoàn chỉnh trên `s1_simple` (Bước 2) | Cần `mock_sites/READY` có trên `main`. Kiểm tra bằng `git fetch && git merge origin/main`. Trong lúc chờ, test harness trên một trang HTML tạm trong `bench/llm/` |
 | **M3** | Chạy ma trận + `reports/llm.md` (Bước 3–4). Ghi rõ model thắng và chế độ cache thắng vào status | Mở khóa M4 của Agent 1 |
 
+## Tình trạng ngày 23/11: harness đã xong, chỉ còn chờ mock site
+
+Harness đã xong và đã chạy thật trên dev site: 3/3 lượt thành công, hết $0,0061. Ba đường đều chạy được: không cache, OTP với `ask_human`, và cache `actions`. Phần việc còn lại là **chạy ma trận theo đúng các lệnh dưới đây**, không viết lại harness.
+
+```bash
+uv run python -m bench.llm.run --dev --plan              # xem trước sẽ chạy gì, không tốn tiền
+uv run python -m mock_sites.serve                        # terminal riêng, sau khi có mock_sites/READY
+
+uv run python -m bench.llm.run --models claude-haiku-5-5 --modes none    --reps 5
+uv run python -m bench.llm.run --models claude-haiku-5-5 --modes actions --reps 5
+uv run python -m bench.llm.run --models claude-haiku-5-5 --modes session --reps 5 --tasks t07,t08
+uv run python -m bench.llm.run --models claude-sonnet-5-5 --modes none   --reps 1 --no-warmup
+```
+
+- Chạy đúng thứ tự trên. Lệnh nào bị dừng giữa chừng thì cứ chạy lại y nguyên: harness tự bỏ qua các ô đã chạy đủ.
+- Trước mỗi lệnh, chạy với `--plan` để xem ước tính chi phí. Nếu `đã tiêu + ước tính` vượt $1,80 thì **dừng lại và hỏi người dùng**, không tự tăng trần.
+- Mã thoát 3 nghĩa là đã chạm trần ngân sách. Dừng lại, không chạy tiếp.
+
+Các file của harness:
+- `bench/llm/runner.py`: chạy một lượt, chấm kết quả, ghi `RunRecord`, lưu cache code.
+- `bench/llm/run.py`: chạy cả ma trận, có chạy tiếp từ chỗ dừng và chặn theo ngân sách.
+- `bench/llm/budget.py`: cộng chi phí từ mọi file JSONL trong `results/llm/`.
+- `bench/llm/chrome.py`: mở và tắt Chrome local.
+- `bench/llm/devsite.py`: site thử của riêng harness.
+- `bench/llms/__init__.py`: `get_llm()`, bảng giá, `cost_usd()`.
+
 ## Thứ tự làm
 
 ### Bước 1 — Adapter LLM (`bench/llms/`), làm trong lúc chờ `mock_sites/READY`
