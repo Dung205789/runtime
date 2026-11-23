@@ -1,6 +1,18 @@
 # Trạng thái — Agent 1 (Runtime)
 
-- **Đang làm:** chưa bắt đầu
-- **Mốc đã xong:** —
-- **Bị chặn bởi:** —
-- **Agent 2 cần biết:** mock site chưa sẵn sàng. Đợi `mock_sites/READY` có trên `main`.
+- **Đang làm:** M3: đang chạy toàn bộ ma trận đo (`uv run python -m bench.runtime.run all`, bắt đầu 2026-11-23), ước tính 8–10 giờ. Pilot 10/10 `success` trên chrome_local, chi phí LLM trung vị $0.0036/lượt.
+- **Mốc đã xong:**
+  - M1: 5 mock site trong `mock_sites/`, `uv run python -m mock_sites.serve`, kiểm tra `uv run python -m mock_sites.verify` đạt 15/15 (10/10 task `success`, s4 chặn Chromium headless mặc định). Có `mock_sites/READY`.
+  - M2: `bench/providers/` có 5 runtime và `get_provider()`. Kiểm tra `uv run python -m bench.providers.check`:
+    - `chrome_local` đạt: browser-use 1.0.8 nối CDP bằng `Browser(cdp_url=...)`, `navigator.webdriver = false`, 3 phiên song song ổn, không sót tiến trình.
+    - `steel_selfhost` đạt, đã kiểm chứng trên container thật: browser-use nối CDP được, mở mock site qua `host.docker.internal`. **Mỗi container chỉ giữ 1 phiên**, nên N phiên song song cần N container (`up N`, `STEEL_SELFHOST_N=N`). Đã thử 3 phiên trên 3 container.
+    - `steel_cloud`, `browser_use_cloud`, `kernel` đạt: tạo phiên, browser-use nối CDP, mở mock site qua tunnel, qua được JS challenge của s4.
+    - Tunnel: `uv run python -m mock_sites.tunnel` (Cloudflare Quick Tunnel), `site_url_for()` tự đọc URL. Qua tunnel thì `/_bench/*` bị chặn.
+  - M1 và M2 được merge vào `main` trong cùng một PR. Code đo của M3 (`bench/runtime/`) sẽ vào PR M3, cùng `results/runtime/` và `reports/runtime.md`.
+- **Bị chặn bởi:** không có.
+- **Agent 2 cần biết:**
+  - Dùng `from bench.providers import get_provider`, rồi `p = get_provider("chrome_local")`, `h = await p.start()`, `browser_use.Browser(cdp_url=h.cdp_url)`, cuối cùng `await p.stop(h)`. `stop()` dọn cả tiến trình con và profile tạm.
+  - `chrome_local` mặc định có giao diện (headful), vì headless bị s4 chặn. Đặt `BENCH_CHROME_HEADLESS=1` nếu cần headless.
+  - `p.versions` có phiên bản Chrome; `bench.providers.lib_versions()` có phiên bản browser-use và Playwright, để ghi vào `versions`.
+  - Mock site: đọc `mock_sites/READY`. `GET /_bench/otp` của s5 trả `{"otp": "123456"}` và **bắt buộc header `X-Bench-Harness: 1`** (thiếu thì 403). Lý do: agent browser-use 1.0 tự chạy Python trên máy đo nên có thể tự đọc OTP. `GET /_bench/otp_reads` liệt kê các lần đọc lén.
+  - browser-use 1.0.8: `Agent(..., judge=True)` là mặc định và gọi LLM thêm một lần sau mỗi lượt; harness của Agent 1 đặt `judge=False`. `result.usage['input']` **đã gồm** `cache_read` và `cache_write`. genai-prices ghi giá input Haiku 5.5 là $0.50/MTok, khác trang chính thức ($0.10/MTok), nên đừng dùng `result.cost_usd`. s4 giới hạn 10 request/phút/IP, gọi `POST /_bench/reset_rate` giữa các lượt nếu chạy dày.
