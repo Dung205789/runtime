@@ -1,0 +1,38 @@
+Mock site sẵn sàng (Agent 1, M1, 2026-11-23).
+
+Chạy cả 5 site:
+    uv run python -m mock_sites.serve
+
+Kiểm tra lại (Playwright, không dùng LLM, tự bật site):
+    uv run python -m mock_sites.verify
+    -> 15/15 đạt: 10/10 task success bằng grade(), s4 chặn headless mặc định, honeypot, rate limit.
+
+Site (127.0.0.1):
+    s1_simple  8801   form một trang, input date/time native, POST /book
+    s2_wizard  8802   3 bước, date picker JS tự viết (mở ở tháng 11/2026), khung giờ là nút (mỗi 30 phút 11:00–21:30)
+    s3_spa     8803   form render bằng JS; modal cookie che form (lưu đồng ý vào localStorage "cookie_consent");
+                      khung giờ tải bằng fetch /api/slots, trễ 300–1500 ms (mỗi 15 phút 11:00–21:30)
+    s4_guarded 8804   chặn UA "HeadlessChrome"; JS challenge cấp cookie `bench_pass` (chặn navigator.webdriver = true);
+                      honeypot ẩn `website`; 10 request/phút/IP (không tính /_bench/*) -> 429
+    s5_otp     8805   form đơn giản; submit xong phải nhập OTP 6 số (hạn 30 phút, sai tối đa 5 lần) thì đơn mới được lưu
+
+Tunnel công khai (chỉ cần cho runtime cloud; Agent 2 dùng chrome_local thì không cần):
+    uv run python -m mock_sites.tunnel
+    -> mở 5 Cloudflare Quick Tunnel, ghi URL vào tmp/public_urls.json, Ctrl-C để đóng.
+    Request đi qua tunnel: /_bench/* bị chặn 403; s4 tính rate limit theo IP thật (header Cf-Connecting-IP).
+
+Endpoint kiểm tra (mọi site, chỉ gọi qua 127.0.0.1):
+    POST /_bench/reset      xóa sạch đơn (s4: xóa cả log chặn; s5: xóa cả OTP đang chờ)
+    GET  /_bench/bookings   [{date, time, party_size, name, phone, created_at}]
+Riêng từng site:
+    GET  /_bench/otp        (s5) {"otp": "123456"}; 404 {"otp": null} nếu chưa có OTP.
+                            BẮT BUỘC gửi header `X-Bench-Harness: 1`, thiếu thì 403 (chặn agent tự đọc OTP qua
+                            Python của browser-use 1.0). Lần đọc thiếu header ghi ở GET /_bench/otp_reads (s5).
+    POST /_bench/reset_rate (s4) xóa bộ đếm rate limit; /_bench/reset KHÔNG xóa bộ đếm này
+    GET  /_bench/blocks     (s4) các lần bị chặn: headless_ua, webdriver, bad_challenge, no_cookie, honeypot, rate_limit
+
+Lưu ý:
+    - Chrome thật mở bằng --remote-debugging-port (có giao diện) qua được s4. Headless mặc định bị chặn.
+    - Trên s4, mỗi lượt đặt tốn khoảng 4 request (trang challenge, /_challenge, trang form, /book).
+      Chạy nhiều lượt liên tiếp thì gọi /_bench/reset_rate giữa các lượt nếu không muốn đo rate limit.
+    - Trạng thái nằm trong bộ nhớ; tắt serve là mất hết đơn.
