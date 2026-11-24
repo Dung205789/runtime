@@ -1,0 +1,22 @@
+{
+ "runtime": "steel_selfhost",
+ "checked_at": "2026-11-23T15:24:16.517704+00:00",
+ "has_url": true,
+ "typed_ok": true,
+ "provider_versions": {
+  "image": "bench-steel-browser:liveview-fix",
+  "containers": 1
+ },
+ "viewer_ws_frames": 19,
+ "viewer_console_errors": [],
+ "viewer_element": {
+  "tag": "CANVAS",
+  "x": 45.78125,
+  "y": 80,
+  "w": 1308.4375,
+  "h": 920
+ },
+ "typed_value": "4821",
+ "method": "bàn phím, ô OTP đã focus sẵn",
+ "input_latency_ms": 3.5
+}

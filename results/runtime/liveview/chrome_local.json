@@ -1,0 +1,7 @@
+{
+ "runtime": "chrome_local",
+ "checked_at": "2026-11-23T03:16:40.162259+00:00",
+ "has_url": false,
+ "typed_ok": false,
+ "note": "runtime không cấp URL Live View"
+}

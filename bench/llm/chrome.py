@@ -80,24 +80,24 @@ class LocalChrome:
 
 def launch(profile_dir: Path | None = None, headless: bool | None = None, timeout_s: float = 30) -> LocalChrome:
     if headless is None:
-        headless = os.environ.get("BENCH_HEADLESS", "1") != "0"
+        headless = os.environ.get("BENCH_CHROME_HEADLESS", "") == "1"
     temp = profile_dir is None
-    profile = Path(tempfile.mkdtemp(prefix="bench-chrome-")) if temp else profile_dir
+    profile = Path(tempfile.mkdtemp(prefix="bench-chrome-")) if temp else profile_dir.resolve()
     profile.mkdir(parents=True, exist_ok=True)
     port = free_port()
     args = [
         chrome_path(),
         f"--remote-debugging-port={port}",
+        "--remote-debugging-address=127.0.0.1",
         f"--user-data-dir={profile}",
         "--no-first-run",
         "--no-default-browser-check",
-        "--disable-background-networking",
         "--disable-sync",
+        "--disable-features=Translate",
         "--window-size=1280,900",
+        *(["--headless=new"] if headless else []),
         "about:blank",
     ]
-    if headless:
-        args.insert(1, "--headless=new")
     t0 = time.perf_counter()
     proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     url = f"http://127.0.0.1:{port}"

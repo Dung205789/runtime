@@ -1,0 +1,18 @@
+{
+ "runtime": "kernel",
+ "checked_at": "2026-11-23T03:25:05.906575+00:00",
+ "has_url": true,
+ "typed_ok": true,
+ "viewer_ws_frames": 12,
+ "viewer_console_errors": [],
+ "viewer_element": {
+  "tag": "VIDEO",
+  "x": 0,
+  "y": 106.25,
+  "w": 1400,
+  "h": 787.5
+ },
+ "typed_value": "4821",
+ "method": "bấm vào ô OTP trên khung xem (quy đổi cả màn hình) rồi gõ",
+ "input_latency_ms": 264.6
+}

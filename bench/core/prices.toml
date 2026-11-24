@@ -1,5 +1,35 @@
 [runtime]
 
+[runtime.steel_cloud]
+usd_per_browser_hour = 0.10          # gói Launch ($0 + usage, tặng $30 một lần); gói Scale $0.08/giờ
+billing = "theo giây, làm tròn lên mỗi phiên"
+plan = "Launch"
+limits = "10 phiên song song; phiên tối đa 15 phút; 60 lần tạo phiên/phút"
+source = "https://steel.dev/pricing ; https://steel.dev/docs/platform/pricing ; https://steel.dev/docs/platform/limits"
+checked = "2026-11-23"
+
+[runtime.browser_use_cloud]
+usd_per_browser_hour = 0.06
+billing = "theo phút, tối thiểu 1 phút"
+plan = "Pay as you go ($0/tháng, tặng $1 một lần)"
+limits = "10 trình duyệt song song khi tổng nạp $0"
+source = "https://browser-use.com/pricing"
+checked = "2026-11-23"
+
+[runtime.kernel]
+usd_per_second_headful = 0.0001333336
+usd_per_browser_hour = 0.48000096    # = usd_per_second_headful × 3600 (tự nhân, trang không ghi giá theo giờ)
+billing = "theo giây khi trình duyệt hoạt động, không tính lúc standby"
+plan = "Developer (miễn phí, $5 tín dụng/tháng)"
+limits = "5 trình duyệt song song (Developer)"
+source = "https://www.kernel.sh/docs/info/pricing ; https://www.kernel.sh/pricing"
+checked = "2026-11-23"
+
+# chrome_local, steel_selfhost: không có giá dịch vụ. Chi phí là ƯỚC TÍNH theo giá một VPS có cùng RAM đỉnh;
+# sẽ ghi khi có số RAM đỉnh đo thật ở M3.
+
+[llm]
+
 [llm.claude-haiku-5-5]
 input = 0.10
 cache_write = 0.125

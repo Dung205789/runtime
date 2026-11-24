@@ -1,0 +1,12 @@
+{
+ "runtime": "steel_cloud",
+ "page": "nowsecure",
+ "url": "https://nowsecure.nl",
+ "checked_at": "2026-11-23T08:41:03.289783+00:00",
+ "http_status": 200,
+ "title": "nowsecure.nl",
+ "text": "NOWSECURE\nBY NODRIVER\nNOWSECURE\nBY NODRIVER",
+ "webdriver": false,
+ "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+ "screenshot": "results/runtime/antibot/steel_cloud_nowsecure.png"
+}
