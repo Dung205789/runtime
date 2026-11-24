@@ -15,7 +15,7 @@ Mọi thứ trong file này **đã chốt**. Không agent nào tự sửa. Cần
 - Khóa API để trong `.env` (mẫu ở `.env.example`). Không hard-code khóa, không commit `.env`.
 - Thiếu khóa của một ứng viên thì ghi `outcome = "skipped"` kèm lý do. **Không bịa số.**
 - Mỗi file kết quả ghi cấu hình máy đo (CPU, RAM, OS) qua `machine_info()` trong `bench/core/contract.py`.
-- **Bắt buộc đặt `ANONYMIZED_TELEMETRY=false`** khi đo bằng browser-use. Nếu để telemetry bật, mỗi lượt bị cộng thêm khoảng 70 giây (đã đo, xem `docs/CHANGES.md`).
+- **Bắt buộc đặt `ANONYMIZED_TELEMETRY=false`** khi đo bằng browser-use. Telemetry gửi URL đã truy cập ra ngoài; ảnh hưởng tới thời gian chưa đo được rõ (xem `docs/CHANGES.md`).
 - browser-use 1.0.8: phải truyền `Agent(..., judge=False)` và `Browser(cdp_url=...)`. Nếu để mặc định, thư viện sẽ mở browser trên Browser Use Cloud và gọi thêm một lượt LLM để tự chấm. Cả hai đều mất tiền và làm sai số đo.
 
 ## 2. Phân quyền thư mục

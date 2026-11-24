@@ -1,0 +1,27 @@
+{
+ "task_id": "t02",
+ "site": "s1_simple",
+ "expected": {
+  "date": "2026-12-20",
+  "time": "12:30",
+  "party_size": 4,
+  "name": "Tran Binh",
+  "phone": "0912345678"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8801/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))\nprint([ (n['role'],n['name']) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value') in ('textbox','button','combobox','spinbutton','checkbox','listbox','dialog','radio')][:60])",
+  "screenshot()",
+  "click_at_xy(466,152)\ntype_text(\"20122026\")\nclick_at_xy(466,250)\ntype_text(\"1230P\")\nclick_at_xy(600,347)\ncdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', modifiers=2, commands=['selectAll'])\ncdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA', modifiers=2)\ntype_text(\"4\")\nclick_at_xy(600,441)\ntype_text(\"Tran Binh\")\nclick_at_xy(600,535)\ntype_text(\"0912 345 678\")\nscreenshot()\nprint(js(\"[...document.querySelectorAll('input')].map(i=>[i.type,i.value,i.validity&&i.validity.valid])\"))",
+  "def clear_and_type(x,y,text):\n    click_at_xy(x,y)\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', modifiers=2, commands=['selectAll'])\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA', modifiers=2)\n    press_key('Backspace')\n    if text: type_text(text)\nclear_and_type(600,347,\"4\")\nclear_and_type(600,441,\"Tran Binh\")\nclear_and_type(600,535,\"0912 345 678\")\nprint(js(\"[...document.querySelectorAll('input')].map(i=>[i.type,i.value,document.activeElement===i])\"))",
+  "print(js(\"[...document.querySelectorAll('input')].map(i=>{const r=i.getBoundingClientRect();return [i.type,Math.round(r.x+r.width/2),Math.round(r.y+r.height/2)]})\"))\nprint(js(\"[innerWidth, innerHeight, devicePixelRatio]\"))",
+  "clear_and_type(634,278,\"4\")\nclear_and_type(634,353,\"Tran Binh\")\nclear_and_type(634,428,\"0912 345 678\")\nclick_at_xy(480,122)\ntype_text(\"20122026\")\nclick_at_xy(470,200)\ntype_text(\"1230P\")\nprint(js(\"[...document.querySelectorAll('input')].map(i=>[i.type,i.value,i.validity.valid])\"))\nscreenshot()",
+  "click_at_xy(375,122)\ntype_text(\"20122026\")\nclick_at_xy(375,201)\ntype_text(\"1230\")\ntype_text(\"P\")\nprint(js(\"[...document.querySelectorAll('input')].slice(0,2).map(i=>[i.type,i.value,i.validity.valid])\"))\nscreenshot()",
+  "for k in \"1230\":\n    press_key(k)\npress_key(\"Tab\")\nfor k in \"P\":\n    press_key(k)\nprint(js(\"[...document.querySelectorAll('input')].slice(0,2).map(i=>[i.type,i.value,i.validity.valid])\"))\nscreenshot()",
+  "click_at_xy(432,201)\npress_key(\"p\")\nprint(js(\"[...document.querySelectorAll('input')].slice(0,2).map(i=>[i.type,i.value,i.validity.valid])\"))\nclick_at_xy(375,122)\nfor k in \"20122026\":\n    press_key(k)\nprint(js(\"[...document.querySelectorAll('input')].slice(0,2).map(i=>[i.type,i.value,i.validity.valid])\"))\nscreenshot()",
+  "click_at_xy(400,486)\nwait_for_load()\nimport time; time.sleep(1.5)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,800)\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.006196725,
+ "learn_ms": 40201.480800024,
+ "learn_steps": 11,
+ "run_id": "38ee814f6c6f"
+}

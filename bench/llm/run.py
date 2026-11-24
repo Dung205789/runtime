@@ -40,7 +40,7 @@ def start_devsite() -> None:
 def done_counts() -> Counter:
     c: Counter = Counter()
     for r in budget.records():
-        if r.get("outcome") == "skipped":
+        if r.get("outcome") == "skipped" or not budget.is_valid(r):
             continue
         c[(r["model"], r["cache_mode"], r["task_id"], r["warmup"])] += 1
     return c

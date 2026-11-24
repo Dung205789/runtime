@@ -26,22 +26,35 @@ Mỗi đề xuất ghi theo mẫu dưới đây, rồi dừng lại để ngư�
 
 - **Lý do:** Lượt thử trên dev site tốn $0,0013–0,0017 cho Haiku. Mock site khó hơn, ước tính mỗi lượt tốn gấp 2–4 lần. Nếu chạy đủ ma trận cũ (990 lượt), riêng Sonnet đã tốn hơn $5.
 - **Ảnh hưởng đến Agent 1:** không có. Riêng p95 của trục LLM chỉ dựa trên 5 lượt mỗi ô, nên trong báo cáo phải ghi rõ là p95 thực chất gần bằng giá trị lớn nhất.
-- **Trạng thái:** đã duyệt (người dùng, 23/11).
+- **Trạng thái:** chờ duyệt. Người dùng mới chỉ nói ngân sách còn $2 và đo Claude trước; phần rút gọn ma trận do Agent 2 tự chọn.
 
 ## 2026-11-23 — Agent 2 — Định nghĩa lại `cache_mode = "actions"`
 
 - **Thay đổi:** browser-use 1.0.8 đã bỏ `rerun_history` / `load_and_rerun`, vì agent của bản này viết Python chạy thẳng trên CDP. Vì vậy `actions` giờ có nghĩa là: lấy các cell Python của một lượt `none` thành công (cùng site, nhưng là task khác) và đưa vào system prompt làm gợi ý. LLM vẫn được gọi, nhưng cần ít bước hơn. Code đã học được lưu ở `results/llm/cache/`.
 - **Lý do:** thư viện không còn cách nào chạy lại action mà không gọi LLM.
 - **Ảnh hưởng đến Agent 1:** không có.
-- **Trạng thái:** đã duyệt. Đã cập nhật mục 7 của hợp đồng.
+- **Trạng thái:** chờ duyệt (Agent 2 tự chọn). Đã cập nhật mục 7 của hợp đồng.
 
 ## 2026-11-23 — Chốt chung — Định dạng `/_bench/otp` và bắt buộc tắt telemetry
 
 - **Thay đổi:**
   - `GET /_bench/otp` trả về `{"otp": "123456"}`. Nếu chưa có OTP thì trả `{"otp": null}`.
   - Mọi lượt đo có dùng browser-use phải đặt `ANONYMIZED_TELEMETRY=false`.
-- **Lý do:** Khi bật telemetry, một lượt chạy trên dev site mất 88 giây, trong khi vòng lặp agent chỉ mất 10 giây. Sau khi tắt telemetry, cùng lượt đó còn 13–23 giây.
+- **Lý do:** telemetry gửi URL đã truy cập ra ngoài. Lượt đầu (có telemetry) mất 88 giây, lượt sau (tắt) 23 giây, nhưng lượt đầu còn dính nạp thư viện lần đầu, nên **chưa chứng minh được** telemetry là nguyên nhân.
 - **Ảnh hưởng đến Agent 1:** **có.**
   - Mock site `s5_otp` phải trả OTP đúng định dạng trên.
-  - Khi đo runtime bằng browser-use phải tắt telemetry, nếu không số thời gian sẽ bị đội lên khoảng 70 giây.
-- **Trạng thái:** đã chốt. Đã cập nhật mục 1 và mục 5 của hợp đồng.
+  - Khi đo runtime bằng browser-use nên tắt telemetry; mức ảnh hưởng tới thời gian chưa đo.
+- **Trạng thái:** chờ duyệt. Đã cập nhật mục 1 và mục 5 của hợp đồng trên nhánh `agent2-llm`.
+
+## 2026-11-24 — Agent 2 — Cờ Chrome chống che cửa sổ
+
+- **Thay đổi (đề xuất cho `chrome_local`):** thêm `--disable-backgrounding-occluded-windows`, `--disable-renderer-backgrounding`, `--disable-background-timer-throttling`.
+- **Lý do:** trên máy của Agent 2, cửa sổ Chrome bị coi là bị che, tab thành `hidden` và click theo tọa độ bị bỏ qua: 12/12 lần thử trượt, thêm cờ thì không trượt. Chưa rõ máy của Agent 1 có bị không.
+- **Ảnh hưởng tới Agent 1:** chỉ là đề xuất. `bench/providers/` không bị sửa; Agent 2 dùng `bench/llm/chrome.py` riêng.
+- **Trạng thái:** chờ duyệt.
+
+## 2026-11-24 — Agent 2 — Đổi hướng theo yêu cầu người dùng
+
+- Dừng mock site; đo trên 5 web nhà hàng thật, dừng trước nút đặt; thay Grok bằng Gemini; thêm cache quy trình (script không gọi LLM).
+- Mọi lượt web thật chạy sau lớp chặn gửi đơn (`bench/llm/guard.py`); lệnh từ chối chạy nếu hash lớp chặn chưa có bằng chứng kiểm chứng.
+- **Khác với mục 5 của hợp đồng** (không chạy trên web đặt bàn thật). **Trạng thái:** người dùng yêu cầu; hợp đồng chưa sửa.

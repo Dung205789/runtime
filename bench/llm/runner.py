@@ -138,6 +138,22 @@ def python_cells(messages) -> list[str]:
     return cells
 
 
+def save_transcript(run_id: str, messages) -> None:
+    from pydantic_ai.messages import ModelResponse
+
+    rows = []
+    for m in messages:
+        for part in m.parts:
+            kind = type(part).__name__
+            if kind == "SystemPromptPart":
+                continue
+            body = getattr(part, "args", None) if isinstance(m, ModelResponse) and hasattr(part, "args") else getattr(part, "content", "")
+            rows.append({"kind": kind, "tool": getattr(part, "tool_name", None), "body": str(body)[:4000]})
+    p = Path("results/llm/transcripts") / f"{run_id}.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def cache_path(model: str, task: BenchTask) -> Path:
     return CACHE_DIR / model / f"{task.site}__{task.task_id}.json"
 
@@ -229,6 +245,10 @@ async def run_one(
     peak = 0.0
     llm = get_llm(model)
     llm.pydantic_model()
+    import psutil as _ps
+
+    _ps.cpu_percent(None)
+    rec.versions["load_start"] = {"ram_free_gb": round(_ps.virtual_memory().available / 2**30, 1)}
     t0 = time.perf_counter()
     try:
         browser_proc = chrome.launch(profile_dir=profile)
@@ -265,12 +285,13 @@ async def run_one(
             except Exception:
                 pass
         if browser_proc is not None:
-            browser_proc.stop()
+            await asyncio.to_thread(browser_proc.stop)
 
     rec.peak_pss_mb = round(peak, 1) or None
     rec.human_wait_ms = human.wait_ms
     if result is not None:
         u = dict(result.usage)
+        save_transcript(rec.run_id, result.messages)
         rec.steps = result.steps
         rec.tokens_in = u.get("input", 0)
         rec.tokens_out = u.get("output", 0)
@@ -313,6 +334,9 @@ async def run_one(
     elif human.asked:
         rec.versions["asked_without_need"] = human.questions
 
+    import psutil
+
+    rec.versions["load_end"] = {"cpu_pct": psutil.cpu_percent(None), "ram_free_gb": round(psutil.virtual_memory().available / 2**30, 1)}
     append_record(out, rec)
     if rec.outcome == "success" and cache_mode == "none" and result is not None:
         save_code_cache(model, task, python_cells(result.messages), rec)

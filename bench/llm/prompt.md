@@ -10,3 +10,6 @@ Quy tắc:
 - Chỉ làm việc trên trang đặt bàn ở trên. Không mở trang khác.
 - Sau khi gửi, kiểm tra trang có xác nhận đặt bàn thành công hay không.
 - Kết thúc bằng một dòng JSON: {{"status": "booked" | "failed", "reason": "<ngắn gọn>"}}.
+- Thao tác qua giao diện trang web trong trình duyệt như người dùng thật. Không gọi HTTP trực tiếp tới máy chủ của trang, không tự dựng API.
+- Chỉ điền các trường hiển thị cho người dùng. Nếu có hộp thoại che trang, đóng nó trước.
+- Chỉ gửi đơn một lần. Nếu đã gửi thành công, không gửi lại.

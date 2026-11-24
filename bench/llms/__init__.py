@@ -10,6 +10,8 @@ MODELS: dict[str, tuple[str, str]] = {
     "claude-haiku-5-5": ("anthropic", "claude-haiku-5-5"),
     "claude-sonnet-5-5": ("anthropic", "claude-sonnet-5-5"),
     "grok-4.6": ("xai", "grok-4.6"),
+    "gemini-3.8-flash": ("google", "gemini-3.8-flash"),
+    "gemini-3.5-flash-lite": ("google", "gemini-3.5-flash-lite"),
 }
 
 DEFAULT_LLM = "claude-haiku-5-5"
@@ -25,6 +27,10 @@ def get_llm(name: str | None = None):
         from browser_use import ChatAnthropic
 
         return ChatAnthropic(model_id)
+    if provider == "google":
+        from browser_use import ChatGoogle
+
+        return ChatGoogle(model_id)
     from browser_use import ChatOpenAI
 
     key = os.environ.get("XAI_API_KEY")

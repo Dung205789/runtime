@@ -1,0 +1,28 @@
+{
+ "task_id": "t07",
+ "site": "s4_guarded",
+ "expected": {
+  "date": "2026-12-15",
+  "time": "19:00",
+  "party_size": 2,
+  "name": "Đỗ Lan",
+  "phone": "0966555444"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8804/\")\nwait_for_load()\nprint(page_info())\nax=cdp('Accessibility.getFullAXTree')['nodes']\nfor n in ax:\n    r=n.get('role',{}).get('value'); nm=n.get('name',{}).get('value','')\n    if r in ('textbox','button','combobox','spinbutton','checkbox','radio','listbox','dialog','link','heading') or 'dialog' in str(r):\n        print(r, repr(nm), n.get('backendDOMNodeId'))",
+  "screenshot()",
+  "def focus_type(n, text):\n    cdp('DOM.focus', backendNodeId=n)\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', commands=['selectAll'])\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA')\n    type_text(text)\nfocus_type(25,\"15\")\nfocus_type(27,\"12\")\nfocus_type(29,\"2026\")\nfocus_type(35,\"07\")\nfocus_type(37,\"00\")\nfocus_type(39,\"PM\")\nprint(js(\"\"\"(()=>{const i=[...document.querySelectorAll('input')];return i.map(x=>[x.type,x.name,x.value])})()\"\"\"))",
+  "screenshot()",
+  "click_at_xy(466,152)\nfor k in \"15122026\":\n    press_key(k)\nclick_at_xy(466,250)\nfor k in \"0700\":\n    press_key(k)\npress_key('p')\nprint(js(\"\"\"(()=>{const i=[...document.querySelectorAll('input')];return i.map(x=>[x.type,x.name,x.value])})()\"\"\"))",
+  "focus_type(5,\"2\")\nprint(js(\"\"\"(()=>{const i=[...document.querySelectorAll('input')];return i.map(x=>[x.type,x.name,x.value])})()\"\"\"))\nprint(js(\"\"\"(()=>{const r=document.querySelector('input[type=date]').getBoundingClientRect();return [r.x,r.y,r.width,r.height]})()\"\"\"))",
+  "click_at_xy(380,122)\nfor k in \"15122026\":\n    press_key(k)\nprint(js(\"\"\"(()=>{const i=[...document.querySelectorAll('input')];return i.map(x=>[x.type,x.name,x.value])})()\"\"\"))",
+  "r=js(\"\"\"(()=>{const r=document.querySelector('input[type=time]').getBoundingClientRect();return [r.x,r.y,r.width,r.height]})()\"\"\")\nprint(r)\nclick_at_xy(r[0]+25, r[1]+r[3]/2)\nfor k in \"0700\":\n    press_key(k)\npress_key('p')\nprint(js(\"\"\"(()=>{const i=[...document.querySelectorAll('input')];return i.map(x=>[x.type,x.name,x.value])})()\"\"\"))",
+  "focus_type(6,\"Đỗ Lan\")\nfocus_type(7,\"0966555444\")\nprint(js(\"\"\"(()=>{const i=[...document.querySelectorAll('input')];return i.map(x=>[x.type,x.name,x.value])})()\"\"\"))\nscreenshot()",
+  "click_at_xy(498,604)\nimport time; time.sleep(2)\nprint(page_info())\nprint(js(\"\"\"document.body.innerText.slice(0,1500)\"\"\"))\nscreenshot()",
+  "b=js(\"\"\"(()=>{const r=document.querySelector('button').getBoundingClientRect();return [r.x,r.y,r.width,r.height]})()\"\"\")\nprint(b)\nclick_at_xy(b[0]+b[2]/2, b[1]+b[3]/2)\ntime.sleep(2)\nprint(js(\"\"\"document.body.innerText\"\"\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.0047211499999999995,
+ "learn_ms": 42768.845999991754,
+ "learn_steps": 12,
+ "run_id": "fe5cdb96c1ed"
+}

@@ -62,7 +62,20 @@ class LocalChrome:
                 pass
         return total / 2**20
 
+    def close_gracefully(self) -> None:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            b = p.chromium.connect_over_cdp(self.cdp_url)
+            b.new_browser_cdp_session().send("Browser.close")
+        self.proc.wait(15)
+
     def stop(self) -> None:
+        if not self.temp_profile:
+            try:
+                self.close_gracefully()
+            except Exception:
+                pass
         try:
             root = psutil.Process(self.proc.pid)
             procs = [*root.children(recursive=True), root]
@@ -95,6 +108,9 @@ def launch(profile_dir: Path | None = None, headless: bool | None = None, timeou
         "--disable-sync",
         "--disable-features=Translate",
         "--window-size=1280,900",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--disable-background-timer-throttling",
         *(["--headless=new"] if headless else []),
         "about:blank",
     ]

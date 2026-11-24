@@ -1,0 +1,27 @@
+{
+ "task_id": "t04",
+ "site": "s2_wizard",
+ "expected": {
+  "date": "2026-12-31",
+  "time": "20:30",
+  "party_size": 3,
+  "name": "Phạm Dũng",
+  "phone": "0933222111"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8802/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint(js(\"[...document.querySelectorAll('input,select,textarea,button')].map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,ph:e.placeholder,val:e.value,label:e.labels&&e.labels[0]?e.labels[0].innerText:'',vis:e.offsetParent!==null}))\"))",
+  "js(\"\"\"(()=>{const s=document.getElementById('party');s.value='3';s.dispatchEvent(new Event('input',{bubbles:true}));s.dispatchEvent(new Event('change',{bubbles:true}));})()\"\"\")\nr=js(\"(()=>{const e=document.getElementById('date-display');const b=e.getBoundingClientRect();return [b.x+b.width/2,b.y+b.height/2]})()\")\nclick_at_xy(*r)\nscreenshot()",
+  "click_at_xy(1096,378)\nscreenshot()",
+  "print(js(\"(()=>{const e=document.elementFromPoint(1096,378);return [e.tagName,e.id,e.className,e.outerHTML.slice(0,200)]})()\"))\nprint(js(\"[...document.querySelectorAll('button')].filter(b=>b.offsetParent!==null).map(b=>[b.id,b.textContent.trim(),b.getBoundingClientRect().x|0,b.getBoundingClientRect().y|0])\"))",
+  "def clickel(sel_js):\n    r=js(f\"(()=>{{const e={sel_js};e.scrollIntoView({{block:'center'}});const b=e.getBoundingClientRect();return [b.x+b.width/2,b.y+b.height/2]}})()\")\n    click_at_xy(*r)\nclickel(\"document.getElementById('next-month')\")\nprint(js(\"document.querySelector('[id=next-month]').parentElement.innerText.slice(0,80)\"))\nprint(js(\"[...document.querySelectorAll('button')].filter(b=>b.offsetParent!==null&&/^\\\\d+$/.test(b.textContent.trim())).slice(0,3).map(b=>b.textContent)\"))",
+  "clickel(\"[...document.querySelectorAll('button')].find(b=>b.offsetParent!==null&&b.textContent.trim()==='31')\")\nprint(js(\"document.getElementById('date-display').value\"))\nscreenshot()",
+  "clickel(\"document.getElementById('next1')\")\nwait_for_load()\nprint(js(\"document.body.innerText.slice(0,400)\"))\nprint(js(\"[...document.querySelectorAll('input,select,button')].filter(e=>e.offsetParent!==null).map(e=>[e.id,e.type,e.value,e.textContent.trim().slice(0,30)])\"))",
+  "clickel(\"[...document.querySelectorAll('button')].find(b=>b.offsetParent!==null&&b.textContent.trim()==='20:30')\")\nprint(js(\"document.body.innerText.slice(-200)\"))\nclickel(\"document.getElementById('next2')\")\nwait_for_load()\nprint(js(\"document.body.innerText.slice(0,300)\"))\nprint(js(\"[...document.querySelectorAll('input,select,button')].filter(e=>e.offsetParent!==null).map(e=>[e.id,e.type,e.value,e.textContent.trim().slice(0,30)])\"))",
+  "clickel(\"document.getElementById('name')\")\ntype_text(\"Phạm Dũng\")\nclickel(\"document.getElementById('phone')\")\ntype_text(\"0933 222 111\")\nprint(js(\"[document.getElementById('name').value, document.getElementById('phone').value]\"))",
+  "clickel(\"document.getElementById('confirm')\")\nwait_for_load()\nprint(js(\"document.body.innerText.slice(0,600)\"))\nprint(page_info())"
+ ],
+ "learn_cost_usd": 0.003952355,
+ "learn_ms": 30014.49280002271,
+ "learn_steps": 11,
+ "run_id": "23fe795d6855"
+}

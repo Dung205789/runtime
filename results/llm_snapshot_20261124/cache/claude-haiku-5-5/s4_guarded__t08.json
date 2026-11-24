@@ -1,0 +1,28 @@
+{
+ "task_id": "t08",
+ "site": "s4_guarded",
+ "expected": {
+  "date": "2026-12-27",
+  "time": "18:00",
+  "party_size": 5,
+  "name": "Bui Minh",
+  "phone": "0944333222"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8804/\")\nwait_for_load()\nprint(page_info())\nprint([ (n['role'], n.get('name')) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role') and n['role'] in ('textbox','button','combobox','spinbutton','checkbox','radio','dialog','listbox','link','heading')][:60])",
+  "screenshot()\nprint(js(\"return Array.from(document.querySelectorAll('input,select,textarea,button,[role=dialog],.modal')).map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,ph:e.placeholder,txt:(e.innerText||'').slice(0,40),vis:!!(e.offsetWidth),val:e.value}))\"))",
+  "import time\nclick_at_xy(480,152)\ntype_text(\"27122026\")\ntime.sleep(0.3)\nprint(js(\"return [document.getElementById('date').value, document.getElementById('date').validity.valid]\"))\nscreenshot()",
+  "n = cdp('DOM.getDocument')['root']['nodeId']\nnid = cdp('DOM.querySelector', nodeId=n, selector='#date')['nodeId']\nbid = cdp('DOM.describeNode', nodeId=nid)['node']['backendNodeId']\ncdp('DOM.focus', backendNodeId=bid)\nfor ch in \"27122026\":\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=ch, text=ch, code=f'Digit{ch}')\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=ch, code=f'Digit{ch}')\ntime.sleep(0.3)\nprint(js(\"return [document.getElementById('date').value, document.getElementById('date').validity.valid]\"))",
+  "nid = cdp('DOM.querySelector', nodeId=n, selector='#time')['nodeId']\nbid = cdp('DOM.describeNode', nodeId=nid)['node']['backendNodeId']\ncdp('DOM.focus', backendNodeId=bid)\nfor k,c in [('0','Digit0'),('6','Digit6'),('0','Digit0'),('0','Digit0'),('P','KeyP')]:\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=k, text=k, code=c)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=k, code=c)\ntime.sleep(0.3)\nprint(js(\"return [document.getElementById('time').value, document.getElementById('time').validity.valid]\"))",
+  "def setfield(sel, text):\n    nid = cdp('DOM.querySelector', nodeId=n, selector=sel)['nodeId']\n    bid = cdp('DOM.describeNode', nodeId=nid)['node']['backendNodeId']\n    cdp('DOM.focus', backendNodeId=bid)\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', commands=['selectAll'])\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA')\n    type_text(text)\nsetfield('#party_size','5')\nsetfield('#name','Bui Minh')\nsetfield('#phone','0944333222')\ntime.sleep(0.3)\nprint(js(\"return ['date','time','party_size','name','phone'].map(i=>document.getElementById(i).value)\"))\nscreenshot()",
+  "click_at_xy(498,604)\ntime.sleep(1.5)\nprint(page_info())\nprint(js(\"return document.body.innerText.slice(0,800)\"))\nscreenshot()",
+  "print(js(\"\"\"const w=document.getElementById('website'); const r=w.getBoundingClientRect(); const cs=getComputedStyle(w);\nconst f=w.form; return {rect:[r.x,r.y,r.w,r.height], disp:cs.display, vis:cs.visibility, op:cs.opacity, label:(w.labels[0]||{}).innerText, formValid: f?f.checkValidity():null, msgs:Array.from(document.querySelectorAll('.error,.msg,.alert,#result,[role=alert],[aria-live]')).map(e=>e.innerText), url:location.href, hist:history.length}\"\"\"))",
+  "print(js(\"return performance.getEntriesByType('resource').filter(e=>!/\\\\.(css|js|png|jpg|svg|ico|woff2?)$/.test(e.name)).map(e=>[e.name,e.initiatorType,Math.round(e.startTime)])\"))\nprint(js(\"return [performance.getEntriesByType('navigation').map(e=>[e.type,e.responseStatus]), document.readyState]\"))\nprint(js(\"return document.documentElement.outerHTML.length\"), cdp('Target.getTargets')['targetInfos'][:3] if False else '')",
+  "print(js(\"return document.documentElement.outerHTML\"))",
+  "nid = cdp('DOM.querySelector', nodeId=n, selector='#submit')['nodeId']\nbid = cdp('DOM.describeNode', nodeId=nid)['node']['backendNodeId']\ncdp('DOM.scrollIntoViewIfNeeded', backendNodeId=bid)\nq = cdp('DOM.getBoxModel', backendNodeId=bid)['model']['content']\nx,y = sum(q[0::2])/4, sum(q[1::2])/4\nprint(x,y)\nclick_at_xy(x,y)\ntime.sleep(2)\nprint(page_info())\nprint(js(\"return document.body.innerText.slice(0,600)\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.005636085,
+ "learn_ms": 59555.135600006906,
+ "learn_steps": 12,
+ "run_id": "0d0b0eecfcf2"
+}

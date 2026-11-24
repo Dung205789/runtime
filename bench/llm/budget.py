@@ -10,6 +10,8 @@ DEFAULT_RESERVE_USD = {
     "claude-haiku-5-5": 0.05,
     "claude-sonnet-5-5": 0.60,
     "grok-4.6": 0.30,
+    "gemini-3.8-flash": 0.15,
+    "gemini-3.5-flash-lite": 0.08,
 }
 
 
@@ -26,7 +28,12 @@ def cap_usd() -> float:
 
 
 def spent_usd(recs: list[dict] | None = None) -> float:
-    return sum(r.get("llm_cost_usd", 0.0) for r in (recs if recs is not None else records()))
+    recs = recs if recs is not None else records()
+    return sum(
+        r.get("llm_cost_usd", 0.0)
+        or (DEFAULT_RESERVE_USD.get(r.get("model"), 0.60) if r.get("outcome") == "crashed" else 0.0)
+        for r in recs
+    )
 
 
 def reserve_usd(model: str, recs: list[dict] | None = None) -> float:
@@ -36,8 +43,17 @@ def reserve_usd(model: str, recs: list[dict] | None = None) -> float:
     return DEFAULT_RESERVE_USD.get(model, 0.60)
 
 
+def is_valid(r: dict) -> bool:
+    return not r.get("versions", {}).get("invalid")
+
+
+def family(model: str) -> str:
+    return model.split("-")[0]
+
+
 def check(model: str) -> tuple[bool, str]:
-    recs = records()
-    spent, reserve, cap = spent_usd(recs), reserve_usd(model, recs), cap_usd()
+    recs = [r for r in records() if family(r["model"]) == family(model)]
+    cap = cap_usd() if family(model) == "claude" else float(os.environ.get(f"BENCH_{family(model).upper()}_BUDGET_USD", "1.00"))
+    spent, reserve = spent_usd(recs), reserve_usd(model, recs)
     msg = f"spent ${spent:.4f} + reserve ${reserve:.4f} for {model} vs cap ${cap:.2f}"
     return spent + reserve <= cap, msg

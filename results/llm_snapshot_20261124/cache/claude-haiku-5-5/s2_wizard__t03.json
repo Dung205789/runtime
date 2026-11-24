@@ -1,0 +1,30 @@
+{
+ "task_id": "t03",
+ "site": "s2_wizard",
+ "expected": {
+  "date": "2026-12-19",
+  "time": "11:30",
+  "party_size": 6,
+  "name": "Lê Chi",
+  "phone": "0987654321"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8802/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint([ (n['role'], n.get('name'), n.get('backendDOMNodeId')) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value') in ('textbox','button','combobox','spinbutton','checkbox','radio','listbox','dialog','link')])",
+  "print(js(\"(()=>{const s=document.querySelector('select');return s?Array.from(s.options).map(o=>[o.value,o.text]):null})()\"))\nprint(js(\"document.querySelector('select') && document.querySelector('select').outerHTML\"))\nscreenshot()",
+  "js(\"(()=>{const s=document.getElementById('party');s.value='6';s.dispatchEvent(new Event('input',{bubbles:true}));s.dispatchEvent(new Event('change',{bubbles:true}));return s.value})()\")\nclick_at_xy(790, 292)\nwait_for_load()\nscreenshot()",
+  "print(js(\"(()=>{const i=document.querySelector('input');return [i.outerHTML, document.activeElement.outerHTML, document.body.innerHTML.length]})()\"))\nprint(js(\"Array.from(document.querySelectorAll('[class*=cal],[class*=date],[role=dialog],[class*=modal]')).map(e=>e.outerHTML.slice(0,200))\"))",
+  "print(js(\"document.getElementById('datepicker').style.display\"))\nr=cdp('DOM.getDocument')\nn=cdp('DOM.querySelector', nodeId=r['root']['nodeId'], selector='#date-display')['nodeId']\nbid=cdp('DOM.describeNode', nodeId=n)['node']['backendNodeId']\ncdp('DOM.scrollIntoViewIfNeeded', backendNodeId=bid)\nq=cdp('DOM.getBoxModel', backendNodeId=bid)['model']['content']\nclick_at_xy(sum(q[0::2])/4, sum(q[1::2])/4)\nprint(js(\"document.getElementById('datepicker').style.display\"))\nscreenshot()",
+  "click_at_xy(1095, 378)\nprint(js(\"document.getElementById('month-title').textContent\"))\nscreenshot()",
+  "def click_sel(sel):\n    r=cdp('DOM.getDocument')\n    n=cdp('DOM.querySelector', nodeId=r['root']['nodeId'], selector=sel)['nodeId']\n    bid=cdp('DOM.describeNode', nodeId=n)['node']['backendNodeId']\n    cdp('DOM.scrollIntoViewIfNeeded', backendNodeId=bid)\n    q=cdp('DOM.getBoxModel', backendNodeId=bid)['model']['content']\n    click_at_xy(sum(q[0::2])/4, sum(q[1::2])/4)\nclick_sel('#next-month')\nprint(js(\"document.getElementById('month-title').textContent\"))",
+  "print(js(\"(()=>{const b=[...document.querySelectorAll('.day')].find(x=>x.dataset.date==='2026-12-19');return b?b.textContent:null})()\"))\nclick_sel('.day[data-date=\"2026-12-19\"]')\nprint(js(\"[document.getElementById('date-display').value, document.getElementById('datepicker').style.display, document.getElementById('party').value]\"))",
+  "click_sel('#next1')\nprint(js(\"document.getElementById('step-no').textContent\"))\nclick_sel('.slot[data-time=\"11:30\"]')\nprint(js(\"document.getElementById('slot-picked').textContent\"))\nclick_sel('#next2')\nprint(js(\"document.getElementById('step-no').textContent\"))",
+  "click_sel('#name')\ncdp('Input.insertText', text='Lê Chi')\nclick_sel('#phone')\ncdp('Input.insertText', text='0987654321')\nprint(js(\"[document.getElementById('name').value, document.getElementById('phone').value]\"))\nscreenshot()",
+  "click_sel('#confirm')\nwait_for_load()\nimport time; time.sleep(1)\nprint(js(\"[document.getElementById('done').style.display, document.getElementById('done').textContent, document.getElementById('err3').textContent]\"))\nscreenshot()",
+  "print(js(\"[!!document.getElementById('confirmation'), document.getElementById('confirmation')?document.getElementById('confirmation').textContent:null, document.getElementById('err3').textContent, document.getElementById('done').textContent]\"))\nscreenshot()",
+  "print(js(\"(()=>{const e=document.getElementById('err3');return {conf:!!document.getElementById('confirmation'), err:e?e.textContent:null, body:document.body.innerText.slice(0,500)}})()\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.00633442,
+ "learn_ms": 49488.263299979735,
+ "learn_steps": 14,
+ "run_id": "21bca93f9dfc"
+}

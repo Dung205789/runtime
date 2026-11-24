@@ -47,3 +47,21 @@ output = 10.00
 unit = "USD per 1M tokens"
 source = "https://platform.claude.com/docs/en/about-claude/pricing"
 checked = "2026-11-23"
+
+[llm."gemini-3.8-flash"]
+input = 0.75
+cache_write = 0.75
+cache_read = 0.075
+output = 3.75
+unit = "USD per 1M tokens, promo through 2026-12-31 (then 1.50 / 7.50)"
+source = "https://ai.google.dev/gemini-api/docs/pricing"
+checked = "2026-11-24"
+
+[llm."gemini-3.5-flash-lite"]
+input = 0.30
+cache_write = 0.30
+cache_read = 0.03
+output = 2.50
+unit = "USD per 1M tokens"
+source = "https://ai.google.dev/gemini-api/docs/pricing"
+checked = "2026-11-24"
