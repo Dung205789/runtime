@@ -30,12 +30,14 @@ def main() -> int:
     groups = [("Claude Haiku chay", "cold", "claude"), ("Gemini flash-lite chay", "cold", "gemini"), ("Replay qua browser-use", "replay", None), ("Script chạy thẳng, Chrome mở sẵn", "direct", None)]
     L.append("## Thời gian (s), chỉ lượt thành công\n\n| Cách | n thành công/tổng | p50 | p95 | $/lượt TB | $/thành công | bước p50 | cpu TB |\n|---|---|---|---|---|---|---|---|")
     for name, kind, m in groups:
-        a = rows(kind, m)
+        full = rows(kind, m)
+        a = [r for r in full if not r["versions"].get("unscored")]
         ok = [r for r in a if r["outcome"] == "success"]
         t = [r["total_ms"] / 1000 for r in ok]
-        cost = sum(r["llm_cost_usd"] for r in a)
+        cost = sum(r["llm_cost_usd"] for r in full)
+        uns = dict(Counter(r["versions"]["unscored"] for r in full if r["versions"].get("unscored")))
         if a:
-            L.append(f"| {name} | {len(ok)}/{len(a)} {dict(Counter(r['outcome'] for r in a if r['outcome'] != 'success'))} | {f(pct(t, .5))} | {f(pct(t, .95))} | {cost / len(a):.4f} | {cost / max(1, len(ok)):.4f} | {pct([r['steps'] for r in ok], .5)} | {st.mean(r['versions']['cpu_pct'] for r in a):.0f} |")
+            L.append(f"| {name} | {len(ok)}/{len(a)} {dict(Counter(r['outcome'] for r in a if r['outcome'] != 'success'))}; không chấm: {uns} | {f(pct(t, .5))} | {f(pct(t, .95))} | {cost / len(full):.4f} | {cost / max(1, len(ok)):.4f} | {pct([r['steps'] for r in ok], .5)} | {st.mean(r['versions']['cpu_pct'] for r in a):.0f} |")
     L.append("\n## p50 theo web (s), vòng 1-2 (mọi cách cùng có)\n\n| Web | " + " | ".join(g[0] for g in groups) + " |\n|---|---|---|---|---|")
     for s in SITES:
         c = []

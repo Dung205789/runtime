@@ -79,7 +79,7 @@ SNAP_JS = """() => ({
     .filter(e => e.type !== 'hidden' && e.value)
     .map(e => [e.name || e.id || e.placeholder || e.type,
       e.type === 'checkbox' || e.type === 'radio' ? (e.checked ? 'checked' : '')
-        : (e.selectedOptions && e.selectedOptions[0] ? e.selectedOptions[0].text : e.value)])
+        : (e.selectedOptions && e.selectedOptions[0] ? (e.selectedOptions[0].text.trim() || e.value) : e.value)])
     .filter(x => x[1]).slice(0, 40)
 })"""
 

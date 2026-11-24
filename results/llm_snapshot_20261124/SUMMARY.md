@@ -1,23 +1,22 @@
-# Kết quả tạm thời — trục LLM & cache (24/11/2026)
+# Kết quả — trục LLM & cache (24/11/2026)
 
-**Bài đo đang chạy, chưa phải số cuối.** Sinh bởi `python -m bench.llm.combo_report`, chỉ đọc `combo.jsonl` (5 web nhà hàng thật, dừng trước nút đặt).
+Sinh bởi `python -m bench.llm.combo_report`, chỉ đọc `combo.jsonl` (5 web nhà hàng thật, dừng trước nút đặt). Đủ 5 vòng.
 
 - CPU máy rất cao trong lúc đo (RPA khác chạy song song): so sánh tương đối được, số giây tuyệt đối chưa dùng làm số chính thức.
-- Claude vòng 3 và một phần vòng 4 chạy lệch giờ với các cách khác; so sánh sạch nhất là vòng 1-2.
-- Mỗi web tối đa 5 lượt; p95 tính trên lượt gộp.
+- Thời gian của Claude, Gemini, replay không gồm mở Chrome. `direct` chạy trên Chrome vừa có một lượt `warm` cùng web (trình duyệt đã có cache tĩnh); `warm` là lượt đầu trên Chrome mới mở.
+- Claude vòng 3 và một phần vòng 4 chạy lệch giờ; vòng 1-2 chạy xen kẽ. Đợt đo bị gián đoạn 339 phút trong vòng 5.
+- `versions.unscored`: lượt lỗi API, hoặc Lẩu Wang mà harness không đọc được ô select của widget; không tính đúng hay sai. `versions.void`/`invalid`: lượt bị loại.
 - Chi phí sinh script ở bảng hòa vốn chưa gồm các lượt hỏng do lỗi harness.
-- Dòng có `versions.void` hoặc `versions.invalid` trong dữ liệu là lượt bị loại, giữ lại để đối chiếu.
-
-Số lượt đã có theo (cách, model): cold/claude-haiku-5-5 vòng 1: 5, cold/claude-haiku-5-5 vòng 2: 5, cold/claude-haiku-5-5 vòng 3: 5, cold/claude-haiku-5-5 vòng 4: 5, cold/claude-haiku-5-5 vòng 5: 2, cold/gemini-3.5-flash-lite vòng 1: 5, cold/gemini-3.5-flash-lite vòng 2: 5, cold/gemini-3.5-flash-lite vòng 3: 5, cold/gemini-3.5-flash-lite vòng 4: 5, cold/gemini-3.5-flash-lite vòng 5: 1, direct/none vòng 1: 5, direct/none vòng 2: 5, direct/none vòng 3: 5, direct/none vòng 4: 5, direct/none vòng 5: 2, replay/none vòng 1: 5, replay/none vòng 2: 5, replay/none vòng 3: 5, replay/none vòng 4: 5, replay/none vòng 5: 2
+- Mỗi web 5 lượt; p95 tính trên lượt gộp.
 
 ## Thời gian (s), chỉ lượt thành công
 
 | Cách | n thành công/tổng | p50 | p95 | $/lượt TB | $/thành công | bước p50 | cpu TB |
 |---|---|---|---|---|---|---|---|
-| Claude Haiku chay | 21/22 {'wrong_data': 1} | 45.8 | 83.5 | 0.0040 | 0.0042 | 7 | 93 |
-| Gemini flash-lite chay | 14/21 {'failed': 5, 'wrong_data': 2} | 90.6 | 126.0 | 0.0312 | 0.0468 | 18 | 81 |
-| Replay qua browser-use | 22/22 {} | 22.9 | 40.1 | 0.0000 | 0.0000 | 0 | 96 |
-| Script chạy thẳng, Chrome mở sẵn | 22/22 {} | 8.5 | 16.4 | 0.0000 | 0.0000 | 0 | 93 |
+| Claude Haiku chay | 23/23 {}; không chấm: {'form reader could not read the widget selects': 2} | 45.1 | 83.5 | 0.0041 | 0.0045 | 6 | 93 |
+| Gemini flash-lite chay | 14/16 {'failed': 1, 'wrong_data': 1}; không chấm: {'form reader could not read the widget selects': 2, 'api error': 6} | 90.6 | 126.0 | 0.0289 | 0.0496 | 18 | 78 |
+| Replay qua browser-use | 25/25 {}; không chấm: {} | 22.6 | 40.1 | 0.0000 | 0.0000 | 0 | 95 |
+| Script chạy thẳng, Chrome mở sẵn | 25/25 {}; không chấm: {} | 8.5 | 16.4 | 0.0000 | 0.0000 | 0 | 92 |
 
 ## p50 theo web (s), vòng 1-2 (mọi cách cùng có)
 
@@ -33,12 +32,12 @@ Số lượt đã có theo (cách, model): cold/claude-haiku-5-5 vòng 1: 5, col
 
 | Cách | mở Chrome (ngoài total) | total | khởi động agent | LLM | số lần gọi LLM | phần còn lại |
 |---|---|---|---|---|---|---|
-| Claude Haiku chay | 9.9 | 52.4 | 13.9 | 18.8 | 7.7 | 19.6 |
+| Claude Haiku chay | 9.4 | 51.0 | 13.6 | 18.4 | 7.6 | 19.0 |
 | Gemini flash-lite chay | 6.0 | 90.6 | 14.0 | 66.0 | 17.4 | 10.6 |
-| Replay qua browser-use | 7.1 | 26.1 | 11.7 | 0.0 | 0.0 | 14.4 |
+| Replay qua browser-use | 6.7 | 24.6 | 10.9 | 0.0 | 0.0 | 13.7 |
 
-Replay: cell script TB 14.4s; nav load TB 6.2s
-Chạy thẳng: script TB 8.5s; nav load TB 4.6s
+Replay: cell script TB 13.7s; nav load TB 6.0s
+Chạy thẳng: script TB 8.2s; nav load TB 4.4s
 
 ## Độ đúng khi đổi dữ liệu (chạy thẳng)
 
@@ -76,11 +75,11 @@ Chạy thẳng: script TB 8.5s; nav load TB 4.6s
 |---|---|---|---|---|---|---|
 | lauphan | 0.0089 | 109 | 0.0031 | 53.7 | 3 | 3 |
 | tong | 0.0296 | 346 | 0.0031 | 30.5 | 10 | 12 |
-| chaoxian | 0.0089 | 158 | 0.0034 | 36.2 | 3 | 5 |
-| lauwang | 0.0129 | 132 | 0.0061 | 65.4 | 3 | 3 |
-| kingbbq | 0.0132 | 145 | 0.0040 | 37.8 | 4 | 4 |
+| chaoxian | 0.0089 | 158 | 0.0032 | 35.7 | 3 | 5 |
+| lauwang | 0.0129 | 132 | 0.0061 | 66.6 | 3 | 2 |
+| kingbbq | 0.0132 | 145 | 0.0038 | 35.2 | 4 | 5 |
 
 ## An toàn
 POST được qua: ['chaoxian.com.vn/dat-ban #loadCosoInfo', 'lauphan.com/dat-ban #loadCosoInfo', 'tong.com.vn/dat-ban #loadCosoInfo']
 Lượt có dữ liệu khách bị chặn: []
-Chi phí combo: {'claude-haiku-5-5': 0.1946, 'none': 0.0, 'gemini-3.5-flash-lite': 0.655}
+Chi phí combo: {'claude-haiku-5-5': 0.2097, 'none': 0.0, 'gemini-3.5-flash-lite': 0.6946}
