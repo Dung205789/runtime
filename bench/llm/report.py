@@ -287,20 +287,40 @@ def build() -> str:
     L.append("")
     L.append("Sinh bởi `uv run python -m bench.llm.shots`; ảnh và từng bước ở `results/llm/real/shots/`, xem kèm ảnh trong `results/llm/real/llm_web.xlsx`.")
     L.append("")
-    L.append("| Web | Số lần | Đúng | Từ chối (blocked) | Sai (wrong_data) | Hỏng (failed) | Dữ liệu khách định rời trang |")
-    L.append("|---|---|---|---|---|---|---|")
+    L.append("| Web | Script | Số lần | Đúng | Từ chối (blocked) | Sai (wrong_data) | Hỏng (failed) | Dữ liệu khách định rời trang | p50 thời gian script, gồm chụp ảnh (s) |")
+    L.append("|---|---|---|---|---|---|---|---|---|")
     lf = Path("results/llm/real/shots/runs.jsonl")
     runs = [json.loads(x) for x in lf.read_text(encoding="utf-8").splitlines() if x.strip()] if lf.exists() else []
     for site in combo_report.SITES:
-        rs = [r for r in runs if r["site"] == site]
-        if rs:
-            c = Counter(r["outcome"] for r in rs)
-            L.append(f"| {site[5:]} | {len(rs)} | {c['success']} | {c['blocked']} | {c['wrong_data']} | {c['failed']} | {sum(r['guard_submit_attempts'] for r in rs)} |")
+        for ver in ("v1", "v2a", "v2"):
+            rs = [r for r in runs if r["site"] == site and r.get("script", "v1") == ver]
+            if rs:
+                c = Counter(r["outcome"] for r in rs)
+                p50 = pct([r["ms"] / 1000 for r in rs if r["outcome"] == "success" and r.get("ms")], 0.5)
+                L.append(f"| {site[5:]} | {ver} | {len(rs)} | {c['success']} | {c['blocked']} | {c['wrong_data']} | {c['failed']} | {sum(r['guard_submit_attempts'] for r in rs)} | {'—' if p50 is None else f'{p50:.1f}'} |")
     L.append("")
-    L.append("Quan sát từ ảnh (không phải số đo):")
-    L.append("- **Lẩu Phan**: một lần chạy lại trước loạt trên (không nằm trong bảng) bị sai giờ: script kết thúc khi ô Giờ còn đang tải, tải xong thì giờ bị đặt về 'Chọn'. Lỗi chập chờn. Cần sửa script: chờ ô Giờ tải xong rồi mới chọn, và kiểm tra lại giá trị ở cuối.")
-    L.append("- **King BBQ**: script chọn nhà hàng khi danh sách nhà hàng chưa tải xong, nên có lần tự từ chối ('không có chi nhánh khớp chính xác') và chuyển sang LLM. Không điền sai.")
-    L.append("- **Lẩu Wang**: ô `<select>` gốc có giờ và cơ sở đúng, nhưng widget hiển thị vẫn ghi 'Giờ' / 'Chọn cơ sở'. Chưa biết web có nhận giá trị khi bấm đặt hay không.")
+    L.append("Script v1: do Haiku sinh, dùng trong đợt đo 24/11. Script v2: sửa tay ngày 25/11 cho Lẩu Wang, Lẩu Phan, King BBQ (lý do trong `script_v2_note` của file script). "
+             "`v2a`: bản v2 đầu của Lẩu Wang, lỗi ở đoạn kiểm tra mới thêm (so chữ hiển thị với chữ option, trong khi theme xóa chữ option); form thật đúng, đã sửa thành v2. Không tính vào kết quả.")
+    L.append("")
+    rc = []
+    for f in sorted(Path("results/llm/real").glob("recheck_*.jsonl")):
+        rc += [json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
+    if rc:
+        L.append("Chạy lại các ca đổi dữ liệu khách với script mới (`uv run python -m bench.llm.recheck`):")
+        L.append("")
+        L.append("| Web | Script | Ca | Đúng | Từ chối | Điền sai | Hỏng |")
+        L.append("|---|---|---|---|---|---|---|")
+        for site in combo_report.SITES:
+            rs = [r for r in rc if r["site"] == site]
+            if rs:
+                c = Counter(r["outcome"] for r in rs)
+                L.append(f"| {site[5:]} | {rs[-1]['versions'].get('script', 'v1')} | {len(rs)} | {c['success']} | {c['blocked']} | {c['wrong_data']} | {c['failed']} |")
+        L.append("")
+    L.append("Lỗi của script v1 (thấy qua ảnh) và cách v2 sửa:")
+    L.append("- **Lẩu Phan**: v1 có lần sai giờ: script kết thúc khi ô Giờ còn đang tải, tải xong thì giờ bị đặt về 'Chọn' (một lần chạy lại trước khi có `runs.jsonl`, không nằm trong bảng). v2 chờ ô Giờ đứng yên 2 giây sau khi điền, bị đặt lại thì chọn lại.")
+    L.append("- **King BBQ**: v1 chọn nhà hàng khi danh sách chưa tải xong, nên có lần tự từ chối và chuyển sang LLM (không điền sai). v2 chờ danh sách nhà hàng tải xong.")
+    L.append("- **Lẩu Wang**: v1 chỉ gán `<select>` gốc nên ô hiển thị vẫn 'Giờ' / 'Chọn cơ sở'. v2 chọn qua widget của theme, ô hiển thị đổi theo, và kiểm tra cả chữ hiển thị.")
+    L.append("- Ca đổi dữ liệu với v2: không có lần điền sai; các lần từ chối giống v1 (giờ web không có: 18:15, 03:00).")
     L.append("")
 
     L.append("## 8. Chưa kiểm chứng")

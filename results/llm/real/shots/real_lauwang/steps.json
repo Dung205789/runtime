@@ -1,19 +1,19 @@
 {
  "site": "real_lauwang",
  "url": "https://lauwang.vn/dat-ban/",
- "started_at": "2026-11-25T03:41:05.277172+00:00",
+ "started_at": "2026-11-25T04:20:08.812775+00:00",
  "case": {
   "party": 3,
   "time": "18:00",
   "day": "ngày mai",
   "name": "Khach Thu Nghiem"
  },
- "ms": 7539.118692999978,
+ "ms": 7431.316190999951,
  "err": null,
  "steps": [
   {
    "n": 1,
-   "t": 4.22,
+   "t": 3.98,
    "action": "Trang tải xong, script chưa điền gì (giá trị mặc định)",
    "changed": [
     "URL: https://lauwang.vn/dat-ban/",
@@ -24,8 +24,8 @@
   },
   {
    "n": 2,
-   "t": 4.62,
-   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"address\\\"]\");if(!s)return {st:'NF'}; const W=[\"51A H\\u1ed3 T\\u00f9n…)",
+   "t": 4.38,
+   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"address\\\"]\");if(!s)return {st:'NF'}; const w=s.closest('.stm_select…)",
    "changed": [
     "address = 51A Hồ Tùng Mậu, HN"
    ],
@@ -33,7 +33,7 @@
   },
   {
    "n": 3,
-   "t": 5.03,
+   "t": 4.83,
    "action": "js((()=>{const e=document.querySelector(\"[name=\\\"date\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTextAreaE…)",
    "changed": [
     "date = 26/11/2026"
@@ -42,7 +42,7 @@
   },
   {
    "n": 4,
-   "t": 5.42,
+   "t": 5.21,
    "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"adult\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTex…)",
    "changed": [
     "adult = 3"
@@ -51,8 +51,8 @@
   },
   {
    "n": 5,
-   "t": 6.71,
-   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"time\\\"]\");if(!s)return {st:'NF'}; const W=[\"18:00\"]; const hit=W.ma…)",
+   "t": 6.53,
+   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"time\\\"]\");if(!s)return {st:'NF'}; const w=s.closest('.stm_select');…)",
    "changed": [
     "time = 18:00"
    ],
@@ -60,7 +60,7 @@
   },
   {
    "n": 6,
-   "t": 7.12,
+   "t": 6.99,
    "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"your-name\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTM…)",
    "changed": [
     "your-name = Khach Thu Nghiem"
@@ -69,7 +69,7 @@
   },
   {
    "n": 7,
-   "t": 7.53,
+   "t": 7.42,
    "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"phone\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTex…)",
    "changed": [
     "phone = 0000000000"
@@ -78,7 +78,7 @@
   },
   {
    "n": 8,
-   "t": 10.95,
+   "t": 10.88,
    "action": "Kết thúc script, chờ 3 giây cho trang ổn định: trạng thái được chấm. Dừng trước nút đặt",
    "changed": [
     "cuối: your-name = Khach Thu Nghiem",
@@ -127,5 +127,6 @@
  "outcome": "success",
  "guard_blocked": [],
  "guard_allowed_posts": [],
- "guard_submit_attempts": 0
+ "guard_submit_attempts": 0,
+ "script": "v2"
 }

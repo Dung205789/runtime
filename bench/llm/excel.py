@@ -136,9 +136,22 @@ def tally(site) -> str:
     rows = [r for r in rows if r["site"] == site]
     if not rows:
         return "chưa chạy"
-    c = Counter(r["outcome"] for r in rows)
-    extra = ", ".join(f"{k} {v}" for k, v in c.items() if k != "success")
-    return f"{c['success']}/{len(rows)} đúng" + (f" ({extra})" if extra else "")
+    parts = []
+    for ver in ("v1", "v2"):
+        rs = [r for r in rows if r.get("script", "v1") == ver]
+        if not rs:
+            continue
+        c = Counter(r["outcome"] for r in rs)
+        extra = ", ".join(f"{k} {v}" for k, v in c.items() if k != "success")
+        parts.append(f"script {ver}: {c['success']}/{len(rs)} đúng" + (f" ({extra})" if extra else ""))
+    return "; ".join(parts)
+
+
+def recheck_rows(site):
+    out = []
+    for f in sorted(Path("results/llm/real").glob("recheck_*.jsonl")):
+        out += [r for r in (json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()) if r["site"] == site]
+    return out
 
 
 def shot_data(site, sub=""):
@@ -222,8 +235,21 @@ def site_sheet(wb, R, site, name):
         fills.append(OK if r["outcome"] == "success" else WARN if r["outcome"] == "blocked" else BAD)
     S.table(["Ca", "Kết quả", "Giá trị form", "Lý do script từ chối", "", "Giây", "", "", "Trường không khớp"], rows, fills)
 
+    rc = recheck_rows(site)
+    if rc:
+        ver = rc[-1]["versions"].get("script", "v1")
+        c = Counter(r["outcome"] for r in rc)
+        S.title(f"3b. Chạy lại các ca đổi dữ liệu với script {ver} (25/11): {c['success']}/{len(rc)} đúng, {c['blocked']} từ chối, {c['wrong_data']} điền sai", SUB)
+        rows, fills = [], []
+        for r in rc:
+            v = r["versions"]
+            rows.append([v["case"], r["outcome"], "; ".join(f"{a}={b}" for a, b in (v.get("form") or [])[:8]), (v.get("err") or "")[:160],
+                         None, r1(r["total_ms"] / 1000), None, None, ", ".join(wrong_fields(r)) if r["outcome"] != "success" else ""])
+            fills.append(OK if r["outcome"] == "success" else WARN if r["outcome"] == "blocked" else BAD)
+        S.table(["Ca", "Kết quả", "Giá trị form", "Lý do script từ chối", "", "Giây", "", "", "Trường không khớp"], rows, fills)
+
     d = shot_data(site)
-    S.title(f"4. Từng bước kèm ảnh (chạy lại script cache ngày 25/11, không gọi LLM; các lần chạy lại: {tally(site)})", SUB)
+    S.title(f"4. Từng bước kèm ảnh, script {d.get('script', 'v1') if d else ''} (chạy lại 25/11, không gọi LLM). Các lần chạy lại: {tally(site)}", SUB)
     if not d:
         S.text("Chưa có ảnh. Chạy: uv run python -m bench.llm.shots " + site)
         return
@@ -239,7 +265,7 @@ def site_sheet(wb, R, site, name):
     bad = shot_data(site, "run_loi")
     if bad:
         wrong = ", ".join(k for k, x in bad["check"].items() if not x)
-        S.title(f"5. Một lần chạy lại không đúng: {bad['outcome']}" + (f", lỗi: {bad['err']}" if bad["err"] else f", trường sai: {wrong}"), SUB)
+        S.title(f"5. Một lần chạy lại không đúng (script {bad.get('script', 'v1')}): {bad['outcome']}" + (f", lỗi: {bad['err']}" if bad["err"] else f", trường sai: {wrong}"), SUB)
         S.text("Form cuối: " + "; ".join(f"{a}={b}" for a, b in bad["form"]), BAD)
         steps_block(S, site, bad, SHOTS / site / "run_loi")
     sc = SCRIPTS / f"{site}.json"
@@ -254,16 +280,16 @@ def site_sheet(wb, R, site, name):
 # Quan sát từ ảnh chụp ngày 25/11 (không phải số đo).
 NOTES = {
     "real_lauwang": [
-        "Ô <select> gốc đã có giờ 18:00 và cơ sở, nhưng widget hiển thị trên trang vẫn ghi 'Giờ' và 'Chọn cơ sở' (xem ảnh bước cuối). "
-        "Người nhìn màn hình sẽ thấy như chưa chọn. Chưa thử bấm đặt nên chưa biết web có nhận giá trị hay không.",
+        "Script v1 (do Haiku sinh) chỉ gán <select> gốc: giá trị đúng nhưng ô hiển thị vẫn ghi 'Giờ' / 'Chọn cơ sở'. "
+        "Script v2 chọn qua widget của theme nên ô hiển thị đổi theo (ảnh bước cuối), và kiểm tra cả chữ hiển thị.",
     ],
     "real_lauphan": [
-        "Một lần chạy lại trước loạt này (không nằm trong số đếm) bị sai giờ: script kết thúc khi ô Giờ còn đang tải, "
-        "tải xong thì giờ bị đặt lại về 'Chọn'. Script không chờ danh sách giờ tải xong: lỗi chập chờn.",
+        "Script v1: một lần chạy lại (ngoài số đếm) bị sai giờ: script kết thúc khi ô Giờ còn đang tải, tải xong thì giờ bị đặt về 'Chọn'. "
+        "Script v2 chờ ô Giờ đứng yên 2 giây sau khi điền, bị đặt lại thì chọn lại.",
     ],
     "real_kingbbq": [
-        "Có lần script từ chối 'không có chi nhánh khớp chính xác': script chọn nhà hàng ngay khi form vừa hiện, lúc danh sách nhà hàng "
-        "chưa tải xong. Từ chối thì chuyển sang LLM chạy chay, không điền sai.",
+        "Script v1 có lúc từ chối 'không có chi nhánh khớp chính xác' vì chọn nhà hàng khi danh sách chưa tải xong (ảnh mục 5). "
+        "Script v2 chờ danh sách nhà hàng tải xong rồi mới chọn.",
     ],
 }
 
