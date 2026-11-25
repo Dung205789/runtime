@@ -122,5 +122,6 @@
  "guard_allowed_posts": [
   "tong.com.vn/dat-ban #loadCosoInfo"
  ],
- "guard_submit_attempts": 0
+ "guard_submit_attempts": 0,
+ "script": "v1"
 }

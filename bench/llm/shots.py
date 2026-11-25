@@ -59,7 +59,7 @@ async def shoot(site: str, out_dir: Path) -> dict:
         blocked = list(d.guard.blocked)
     chk = check(snap["vals"], BASE, None)
     result = {
-        "site": site, "url": R.SITES[site], "started_at": rec.started_at,
+        "site": site, "url": R.SITES[site], "started_at": rec.started_at, "script": "v2" if st.get("script_v1") else "v1",
         "case": {"party": BASE.party, "time": BASE.hhmm, "day": "ngày mai", "name": BASE.name},
         "ms": res["ms"], "err": res["err"], "steps": res["steps"], "form": snap["vals"], "check": chk,
         "outcome": ("blocked" if res["err"] and "UNAVAILABLE" in res["err"] else "failed") if res["err"] else ("success" if all(chk.values()) else "wrong_data"),
@@ -107,7 +107,9 @@ def main() -> int:
                 continue
             results.append((tmp, r))
             with LOG.open("a", encoding="utf-8") as fh:
-                fh.write(json.dumps({k: r.get(k) for k in ("site", "started_at", "outcome", "err", "check", "ms", "guard_submit_attempts")}, ensure_ascii=False) + "\n")
+                row = {k: r.get(k) for k in ("site", "started_at", "outcome", "err", "check", "ms", "guard_submit_attempts")}
+                row["script"] = "v2" if load_script(s).get("script_v1") else "v1"
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
             print(s, i, r.get("outcome"), f"{len(r.get('steps', []))} ảnh", (r.get("err") or "")[:120], "chặn:", len(r.get("guard_blocked", [])),
                   "gửi dữ liệu khách bị chặn:", r.get("guard_submit_attempts"), flush=True)
         if results:

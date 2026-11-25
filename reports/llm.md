@@ -161,18 +161,33 @@ Chi phí combo: {'claude-haiku-5-5': 0.2097, 'none': 0.0, 'gemini-3.5-flash-lite
 
 Sinh bởi `uv run python -m bench.llm.shots`; ảnh và từng bước ở `results/llm/real/shots/`, xem kèm ảnh trong `results/llm/real/llm_web.xlsx`.
 
-| Web | Số lần | Đúng | Từ chối (blocked) | Sai (wrong_data) | Hỏng (failed) | Dữ liệu khách định rời trang |
-|---|---|---|---|---|---|---|
-| lauphan | 9 | 9 | 0 | 0 | 0 | 0 |
-| tong | 4 | 4 | 0 | 0 | 0 | 0 |
-| chaoxian | 4 | 4 | 0 | 0 | 0 | 0 |
-| lauwang | 4 | 4 | 0 | 0 | 0 | 0 |
-| kingbbq | 9 | 6 | 3 | 0 | 0 | 0 |
+| Web | Script | Số lần | Đúng | Từ chối (blocked) | Sai (wrong_data) | Hỏng (failed) | Dữ liệu khách định rời trang | p50 thời gian script, gồm chụp ảnh (s) |
+|---|---|---|---|---|---|---|---|---|
+| lauphan | v1 | 9 | 9 | 0 | 0 | 0 | 0 | 10.3 |
+| lauphan | v2 | 5 | 5 | 0 | 0 | 0 | 0 | 12.4 |
+| tong | v1 | 4 | 4 | 0 | 0 | 0 | 0 | 9.8 |
+| chaoxian | v1 | 4 | 4 | 0 | 0 | 0 | 0 | 10.4 |
+| lauwang | v1 | 4 | 4 | 0 | 0 | 0 | 0 | 7.5 |
+| lauwang | v2a | 5 | 0 | 0 | 0 | 5 | 0 | — |
+| lauwang | v2 | 5 | 5 | 0 | 0 | 0 | 0 | 7.6 |
+| kingbbq | v1 | 9 | 6 | 3 | 0 | 0 | 0 | 19.9 |
+| kingbbq | v2 | 5 | 5 | 0 | 0 | 0 | 0 | 16.2 |
 
-Quan sát từ ảnh (không phải số đo):
-- **Lẩu Phan**: một lần chạy lại trước loạt trên (không nằm trong bảng) bị sai giờ: script kết thúc khi ô Giờ còn đang tải, tải xong thì giờ bị đặt về 'Chọn'. Lỗi chập chờn. Cần sửa script: chờ ô Giờ tải xong rồi mới chọn, và kiểm tra lại giá trị ở cuối.
-- **King BBQ**: script chọn nhà hàng khi danh sách nhà hàng chưa tải xong, nên có lần tự từ chối ('không có chi nhánh khớp chính xác') và chuyển sang LLM. Không điền sai.
-- **Lẩu Wang**: ô `<select>` gốc có giờ và cơ sở đúng, nhưng widget hiển thị vẫn ghi 'Giờ' / 'Chọn cơ sở'. Chưa biết web có nhận giá trị khi bấm đặt hay không.
+Script v1: do Haiku sinh, dùng trong đợt đo 24/11. Script v2: sửa tay ngày 25/11 cho Lẩu Wang, Lẩu Phan, King BBQ (lý do trong `script_v2_note` của file script). `v2a`: bản v2 đầu của Lẩu Wang, lỗi ở đoạn kiểm tra mới thêm (so chữ hiển thị với chữ option, trong khi theme xóa chữ option); form thật đúng, đã sửa thành v2. Không tính vào kết quả.
+
+Chạy lại các ca đổi dữ liệu khách với script mới (`uv run python -m bench.llm.recheck`):
+
+| Web | Script | Ca | Đúng | Từ chối | Điền sai | Hỏng |
+|---|---|---|---|---|---|---|
+| lauphan | v2 | 12 | 10 | 2 | 0 | 0 |
+| lauwang | v2 | 12 | 11 | 1 | 0 | 0 |
+| kingbbq | v2 | 12 | 11 | 1 | 0 | 0 |
+
+Lỗi của script v1 (thấy qua ảnh) và cách v2 sửa:
+- **Lẩu Phan**: v1 có lần sai giờ: script kết thúc khi ô Giờ còn đang tải, tải xong thì giờ bị đặt về 'Chọn' (một lần chạy lại trước khi có `runs.jsonl`, không nằm trong bảng). v2 chờ ô Giờ đứng yên 2 giây sau khi điền, bị đặt lại thì chọn lại.
+- **King BBQ**: v1 chọn nhà hàng khi danh sách chưa tải xong, nên có lần tự từ chối và chuyển sang LLM (không điền sai). v2 chờ danh sách nhà hàng tải xong.
+- **Lẩu Wang**: v1 chỉ gán `<select>` gốc nên ô hiển thị vẫn 'Giờ' / 'Chọn cơ sở'. v2 chọn qua widget của theme, ô hiển thị đổi theo, và kiểm tra cả chữ hiển thị.
+- Ca đổi dữ liệu với v2: không có lần điền sai; các lần từ chối giống v1 (giờ web không có: 18:15, 03:00).
 
 ## 8. Chưa kiểm chứng
 
