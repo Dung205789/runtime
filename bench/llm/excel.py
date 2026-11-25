@@ -42,7 +42,7 @@ SUB = Font(bold=True, size=12, color="2F5597")
 OK = PatternFill("solid", fgColor="E2EFDA")
 BAD = PatternFill("solid", fgColor="F8CBAD")
 WARN = PatternFill("solid", fgColor="FFF2CC")
-WRAP = Alignment(wrap_text=True, vertical="top")
+WRAP = Alignment(wrap_text=True, vertical="top", horizontal="left")
 IMG_W = 600
 
 
@@ -77,6 +77,7 @@ class Sheet:
         for j, h in enumerate(header, 1):
             c = self.ws.cell(self.row, j, h)
             c.font, c.fill, c.alignment = H, HFILL, WRAP
+        self.fit(self.row)
         self.row += 1
         for i, r in enumerate(rows):
             for j, v in enumerate(r, 1):
@@ -84,8 +85,21 @@ class Sheet:
                 c.alignment = WRAP
                 if fills and fills[i]:
                     c.fill = fills[i]
+            self.fit(self.row)
             self.row += 1
         self.row += 1
+
+    def fit(self, row, min_h=15.0):
+        """Đặt chiều cao hàng theo số dòng chữ, để ảnh neo theo hàng không bị lệch khi mở file."""
+        lines = 1
+        for c in self.ws[row]:
+            if c.value is None:
+                continue
+            w = self.ws.column_dimensions[c.column_letter].width or 10
+            per = max(1, int(w * 1.15))
+            n = sum(max(1, math.ceil(len(part) / per)) for part in str(c.value).split("\n"))
+            lines = max(lines, n)
+        self.ws.row_dimensions[row].height = max(min_h, 15 * lines + 2)
 
     def gap(self, n=1):
         self.row += n
@@ -144,8 +158,10 @@ def steps_block(S: Sheet, site: str, d: dict, folder: Path):
         S.ws.cell(row, 2, s["t"]).alignment = WRAP
         S.ws.cell(row, 3, s["action"]).alignment = WRAP
         S.ws.cell(row, 4, "\n".join(s["changed"]) or "—").alignment = WRAP
+        S.fit(row)
         if s.get("file") and (folder / s["file"]).exists():
-            S.ws.row_dimensions[row].height = add_img(S.ws, folder / s["file"], f"E{row}") + 6
+            h = add_img(S.ws, folder / s["file"], f"E{row}") + 6
+            S.ws.row_dimensions[row].height = max(h, S.ws.row_dimensions[row].height)
         S.row += 1
     S.gap()
 
