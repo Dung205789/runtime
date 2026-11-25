@@ -1,0 +1,37 @@
+{
+ "task_id": "t10",
+ "site": "s5_otp",
+ "expected": {
+  "date": "2026-12-21",
+  "time": "12:00",
+  "party_size": 4,
+  "name": "Trịnh Quân",
+  "phone": "0955666777"
+ },
+ "cells": [
+  "new_tab(\"http://127.0.0.1:8805/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint([ (n.get('role'),n.get('name')) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role') and n.get('role') not in ('none','generic','StaticText','InlineTextBox')][:80])",
+  "screenshot()",
+  "click_at_xy(466,152)\ntype_text(\"21122026\")\nclick_at_xy(466,250)\ntype_text(\"1200\")\npress_key(\"Tab\")\ntype_text(\"PM\")\nprint(js(\"\"\"[...document.querySelectorAll('input')].map(i=>({t:i.type,v:i.value,n:i.name||i.id}))\"\"\"))",
+  "screenshot()",
+  "doc=cdp('DOM.getDocument', depth=-1)\ndef nid(sel):\n    r=cdp('DOM.querySelector', nodeId=doc['root']['nodeId'], selector=sel)['nodeId']\n    return cdp('DOM.describeNode', nodeId=r)['node']['backendNodeId']\ndef fill(sel, text, clear=True):\n    n=nid(sel)\n    cdp('DOM.focus', backendNodeId=n)\n    if clear:\n        cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', commands=['selectAll'])\n        cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA')\n        press_key('Backspace')\n    type_text(text)\nfill('input[name=party_size]','4')\nfill('input[name=name]','Trịnh Quân')\nfill('input[name=phone]','0955666777')\nfill('input[name=date]','21122026', clear=False)\nprint(js(\"\"\"[...document.querySelectorAll('input')].map(i=>({t:i.type,v:i.value,n:i.name}))\"\"\"))",
+  "screenshot()",
+  "for ch in \"21122026\":\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=ch, code='Digit'+ch, text=ch)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=ch, code='Digit'+ch)\nprint(js(\"\"\"[...document.querySelectorAll('input')].map(i=>({t:i.type,v:i.value,n:i.name}))\"\"\"))",
+  "cdp('DOM.focus', backendNodeId=nid('input[name=time]'))\nfor k,c in [('1','Digit1'),('2','Digit2'),('0','Digit0'),('0','Digit0'),('p','KeyP')]:\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=k, code=c, text=k if k.isdigit() else '')\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=k, code=c)\nprint(js(\"\"\"[...document.querySelectorAll('input')].map(i=>({t:i.type,v:i.value,n:i.name}))\"\"\"))",
+  "screenshot()",
+  "cdp('Input.dispatchKeyEvent', type='keyDown', key='P', code='KeyP', text='P', windowsVirtualKeyCode=80)\ncdp('Input.dispatchKeyEvent', type='keyUp', key='P', code='KeyP', windowsVirtualKeyCode=80)\nprint(js(\"\"\"[...document.querySelectorAll('input')].map(i=>({t:i.type,v:i.value,n:i.name, valid:i.validity.valid}))\"\"\"))",
+  "screenshot()",
+  "btn=[n for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value')=='button' and n.get('name',{}).get('value')=='Đặt bàn']\nn=btn[0]['backendDOMNodeId']\ncdp('DOM.scrollIntoViewIfNeeded', backendNodeId=n)\nq=cdp('DOM.getBoxModel', backendNodeId=n)['model']['content']\nclick_at_xy(sum(q[0::2])/4, sum(q[1::2])/4)\nwait_for_load()\nimport time; time.sleep(1)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))",
+  "screenshot()",
+  "n=nid('input')\ncdp('DOM.focus', backendNodeId=n)\ntype_text(\"487714\")\nprint(js(\"[...document.querySelectorAll('input')].map(i=>i.value)\"))\nob=[x for x in cdp('Accessibility.getFullAXTree')['nodes'] if x.get('role',{}).get('value')=='button' and x.get('name',{}).get('value')=='Xác nhận'][0]['backendDOMNodeId']\ncdp('DOM.scrollIntoViewIfNeeded', backendNodeId=ob)\nq=cdp('DOM.getBoxModel', backendNodeId=ob)['model']['content']\nclick_at_xy(sum(q[0::2])/4, sum(q[1::2])/4)\ntime.sleep(1.5)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))",
+  "screenshot()",
+  "doc=cdp('DOM.getDocument', depth=-1)\nn=nid('input')\ncdp('DOM.focus', backendNodeId=n)\ntype_text(\"487714\")\nprint(js(\"[...document.querySelectorAll('input')].map(i=>i.value)\"))\nob=[x for x in cdp('Accessibility.getFullAXTree')['nodes'] if x.get('role',{}).get('value')=='button' and x.get('name',{}).get('value')=='Xác nhận'][0]['backendDOMNodeId']\ncdp('DOM.scrollIntoViewIfNeeded', backendNodeId=ob)\nq=cdp('DOM.getBoxModel', backendNodeId=ob)['model']['content']\nclick_at_xy(sum(q[0::2])/4, sum(q[1::2])/4)\ntime.sleep(1.5)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))",
+  "screenshot()",
+  "print(js(\"[...document.querySelectorAll('input,button')].map(i=>({tag:i.tagName,t:i.type,n:i.name,id:i.id,v:i.value,txt:i.innerText,vis:i.offsetParent!==null}))\"))",
+  "n=nid('input[name=otp]')\ncdp('DOM.focus', backendNodeId=n)\ntype_text(\"487714\")\nprint(js(\"[...document.querySelectorAll('input')].map(i=>i.value)\"))\nob=nid('#verify')\ncdp('DOM.scrollIntoViewIfNeeded', backendNodeId=ob)\nq=cdp('DOM.getBoxModel', backendNodeId=ob)['model']['content']\nclick_at_xy(sum(q[0::2])/4, sum(q[1::2])/4)\ntime.sleep(1.5)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))",
+  "screenshot()"
+ ],
+ "learn_cost_usd": 0.009239955,
+ "learn_ms": 83639.86120000482,
+ "learn_steps": 13,
+ "run_id": "6fdea5685bbc"
+}

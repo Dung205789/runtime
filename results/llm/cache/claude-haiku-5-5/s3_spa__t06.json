@@ -1,0 +1,25 @@
+{
+ "task_id": "t06",
+ "site": "s3_spa",
+ "expected": {
+  "date": "2026-12-24",
+  "time": "19:30",
+  "party_size": 8,
+  "name": "Võ Khang",
+  "phone": "0909888777"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8803/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint(js(\"Array.from(document.querySelectorAll('input,select,textarea,button')).map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,ph:e.placeholder,label:e.labels&&e.labels[0]?e.labels[0].innerText:'',val:e.value,vis:!!(e.offsetWidth||e.offsetHeight),txt:e.innerText}))\"))",
+  "import time\ntime.sleep(2)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint(js(\"Array.from(document.querySelectorAll('input,select,textarea,button')).map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,ph:e.placeholder,label:e.labels&&e.labels[0]?e.labels[0].innerText:'',val:e.value,vis:!!(e.offsetWidth||e.offsetHeight),txt:e.innerText}))\"))\nscreenshot()",
+  "js(\"document.getElementById('cookie-reject').click()\")\ntime.sleep(1)\nprint(js(\"document.getElementById('cookie-reject').offsetParent!==null\"))\nprint(js(\"Array.from(document.querySelectorAll('#party option')).map(o=>o.value).join(',')\"))\nscreenshot()",
+  "cdp('DOM.enable')\nbox = js(\"(()=>{const r=document.getElementById('date').getBoundingClientRect();return [r.x+30,r.y+r.height/2]})()\")\nclick_at_xy(box[0], box[1])\ntype_text(\"24122026\")\ntime.sleep(1)\nprint(js(\"(()=>{const d=document.getElementById('date');return {val:d.value}})()\"))\nscreenshot()",
+  "for ch in \"24122026\":\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=ch, code='Digit'+ch, text=ch)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=ch, code='Digit'+ch)\ntime.sleep(1)\nprint(js(\"document.getElementById('date').value\"))\nprint(js(\"document.body.innerText.slice(0,400)\"))\nscreenshot()",
+  "time.sleep(2)\njs(\"(()=>{const s=document.getElementById('party');s.value='8';s.dispatchEvent(new Event('input',{bubbles:true}));s.dispatchEvent(new Event('change',{bubbles:true}));})()\")\ntime.sleep(2)\nprint(js(\"document.getElementById('party').value\"))\nprint(js(\"document.body.innerText.slice(0,500)\"))\nprint(js(\"Array.from(document.querySelectorAll('button,input[type=radio],[role=button],a,.slot,li')).filter(e=>e.offsetParent).map(e=>({tag:e.tagName,id:e.id,txt:(e.innerText||e.value||'').trim(),cls:e.className,dis:e.disabled})).slice(0,60)\"))",
+  "def center(sel_js):\n    return js(sel_js)\np = js(\"(()=>{const b=[...document.querySelectorAll('button.slot')].find(e=>e.innerText.trim()==='19:30');b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()\")\nclick_at_xy(p[0], p[1])\ntime.sleep(1)\nprint(js(\"[...document.querySelectorAll('button.slot')].map(b=>[b.innerText.trim(),b.className,b.getAttribute('aria-pressed')]).filter(x=>/sel|on|active|pressed|true/.test(x.join(' ')))\"))\nfor fid,val in [('name','Võ Khang'),('phone','0909 888 777')]:\n    c = js(f\"(()=>{{const r=document.getElementById('{fid}');r.scrollIntoView({{block:'center'}});r.focus();const b=r.getBoundingClientRect();return [b.x+b.width/2,b.y+b.height/2]}})()\")\n    click_at_xy(c[0], c[1])\n    type_text(val)\ntime.sleep(1)\nprint(js(\"[document.getElementById('date').value, document.getElementById('party').value, document.getElementById('name').value, document.getElementById('phone').value]\"))\nscreenshot()",
+  "c = js(\"(()=>{const r=document.getElementById('submit').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()\")\nclick_at_xy(c[0], c[1])\ntime.sleep(3)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,800)\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.004883055,
+ "learn_ms": 56039.2831999925,
+ "learn_steps": 9,
+ "run_id": "05812f7cc855"
+}

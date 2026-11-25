@@ -1,0 +1,31 @@
+{
+ "task_id": "t09",
+ "site": "s5_otp",
+ "expected": {
+  "date": "2026-12-18",
+  "time": "20:00",
+  "party_size": 2,
+  "name": "Ngô Hà",
+  "phone": "0922111000"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8805/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint([ (n['role'], n.get('name'), n.get('backendDOMNodeId')) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value') in ('textbox','button','combobox','spinbutton','checkbox','radio','listbox','dialog')])",
+  "screenshot()\nprint(js(\"[...document.querySelectorAll('input,select,textarea')].map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,val:e.value,vis:e.offsetParent!==null}))\"))",
+  "click_at_xy(468,152)\ntype_text(\"18122026\")\nclick_at_xy(468,250)\ntype_text(\"0800PM\")\nclick_at_xy(600,418)\ntype_text(\"Ngô Hà\")\nclick_at_xy(600,512)\ntype_text(\"0922111000\")\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.value,e.validity&&e.validity.valid])\"))\nscreenshot()",
+  "print(js(\"[...document.querySelectorAll('input')].map(e=>{const r=e.getBoundingClientRect();return [e.id,Math.round(r.x+r.width/2),Math.round(r.y+r.height/2)]})\"), page_info()['w'], page_info()['pw'])",
+  "def clear_and_type(x,y,text):\n    click_at_xy(x,y)\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', modifiers=2)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA')\n    press_key('Backspace')\n    type_text(text)\nclear_and_type(634,278,\"2\")\nclear_and_type(634,353,\"Ngô Hà\")\nclear_and_type(634,428,\"0922111000\")\nclick_at_xy(366,122)\ntype_text(\"18122026\")\nclick_at_xy(366,200)\ntype_text(\"0800PM\")\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.value,e.validity&&e.validity.valid])\"))\nscreenshot()",
+  "def set_text(backend_id, text):\n    cdp('DOM.focus', backendNodeId=backend_id)\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', commands=['selectAll'])\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA')\n    press_key('Backspace')\n    type_text(text)\nids = {n['properties'][0]['value']['value'] if False else None:None for n in []}\nnodes = cdp('DOM.getDocument', depth=-1)\ndef bid(sel):\n    nid = cdp('DOM.querySelector', nodeId=nodes['root']['nodeId'], selector=sel)['nodeId']\n    return cdp('DOM.describeNode', nodeId=nid)['node']['backendNodeId']\nset_text(bid('#party_size'), \"2\")\nset_text(bid('#phone'), \"0922111000\")\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.value])\"))",
+  "cdp('DOM.focus', backendNodeId=bid('#date'))\ntype_text(\"18122026\")\nprint(js(\"document.getElementById('date').value\"))\ncdp('DOM.focus', backendNodeId=bid('#time'))\ntype_text(\"0800PM\")\nprint(js(\"document.getElementById('time').value\"))\nscreenshot()",
+  "cdp('DOM.focus', backendNodeId=bid('#date'))\nfor ch in \"18122026\":\n    press_key(ch)\nprint(\"date:\", repr(js(\"document.getElementById('date').value\")))\ncdp('DOM.focus', backendNodeId=bid('#time'))\nfor ch in \"0800\":\n    press_key(ch)\npress_key('p')\nprint(\"time:\", repr(js(\"document.getElementById('time').value\")))",
+  "screenshot()\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.value,e.validity.valid])\"))",
+  "r = js(\"(()=>{const b=[...document.querySelectorAll('button,input[type=submit]')].find(b=>b.textContent.includes('Đặt bàn')||b.value==='Đặt bàn');const r=b.getBoundingClientRect();return [Math.round(r.x+r.width/2),Math.round(r.y+r.height/2)]})()\")\nclick_at_xy(r[0], r[1])\nwait_for_load()\nimport time; time.sleep(1.5)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))\nscreenshot()",
+  "cdp('DOM.focus', backendNodeId=bid('#otp') if js(\"!!document.getElementById('otp')\") else bid(\"input\"))\nfor ch in \"795900\":\n    press_key(ch)\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.name,e.value])\"))\nr = js(\"(()=>{const b=[...document.querySelectorAll('button,input[type=submit]')][0];const r=b.getBoundingClientRect();return [Math.round(r.x+r.width/2),Math.round(r.y+r.height/2)]})()\")\nclick_at_xy(r[0], r[1])\ntime.sleep(1.5); wait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))\nscreenshot()",
+  "nodes = cdp('DOM.getDocument', depth=-1)\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.name,e.value])\"))\ncdp('DOM.focus', backendNodeId=bid(\"input\"))\nfor ch in \"795900\":\n    press_key(ch)\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.name,e.value])\"))",
+  "c = js(\"(()=>{const r=document.getElementById('otp').getBoundingClientRect();return [Math.round(r.x+r.width/2),Math.round(r.y+r.height/2)]})()\")\nclick_at_xy(c[0], c[1])\nfor ch in \"795900\":\n    press_key(ch)\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.name,e.value])\"))",
+  "r = js(\"(()=>{const b=[...document.querySelectorAll('button')][0];const r=b.getBoundingClientRect();return [Math.round(r.x+r.width/2),Math.round(r.y+r.height/2),b.textContent]})()\")\nprint(r)\nclick_at_xy(r[0], r[1])\ntime.sleep(2)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.008423415,
+ "learn_ms": 77941.18620001245,
+ "learn_steps": 16,
+ "run_id": "58d78f16b078"
+}

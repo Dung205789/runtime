@@ -1,0 +1,21 @@
+{
+ "task_id": "d02",
+ "site": "dev_otp",
+ "expected": {
+  "date": "2026-12-21",
+  "time": "12:00",
+  "party_size": 4,
+  "name": "Trịnh Quân",
+  "phone": "0955666777"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8899/?otp=1\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,3000)\"))\nprint(js(\"Array.from(document.querySelectorAll('input,select,textarea,button')).map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,ph:e.placeholder,val:e.value,txt:e.innerText||'',req:e.required}))\"))",
+  "js(\"\"\"\nconst set=(n,v)=>{const e=document.querySelector(`[name=${n}]`);const d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;d.call(e,v);e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));};\nset('date','2026-12-21');set('time','12:00');set('party_size','4');set('name','Trịnh Quân');set('phone','0955666777');\n\"\"\")\nprint(js(\"Array.from(document.querySelectorAll('input')).map(e=>[e.name,e.value])\"))\nscreenshot()",
+  "js(\"document.querySelector('button[type=submit]').click()\")\nwait_for_load()\nimport time; time.sleep(1)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint(js(\"Array.from(document.querySelectorAll('input')).map(e=>[e.name,e.type,e.value])\"))",
+  "js(\"\"\"const e=document.querySelector('[name=code]');const d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;d.call(e,'826625');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));\"\"\")\njs(\"(Array.from(document.querySelectorAll('button')).find(b=>b.innerText.includes('Xác nhận'))||document.querySelector('button')).click()\")\nwait_for_load(); time.sleep(1)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))"
+ ],
+ "learn_cost_usd": 0.00156906,
+ "learn_ms": 37436.88779999502,
+ "learn_steps": 6,
+ "run_id": "79476c990f1c"
+}

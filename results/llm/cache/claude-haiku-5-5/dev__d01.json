@@ -1,0 +1,20 @@
+{
+ "task_id": "d01",
+ "site": "dev",
+ "expected": {
+  "date": "2026-12-12",
+  "time": "19:00",
+  "party_size": 2,
+  "name": "Nguyễn An",
+  "phone": "0901234567"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8899/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint(js(\"Array.from(document.querySelectorAll('input,select,textarea,button')).map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,ph:e.placeholder,val:e.value,txt:e.innerText||e.value}))\"))",
+  "r = js(\"\"\"\nconst set=(n,v)=>{const e=document.querySelector(`[name=${n}]`); e.focus(); e.value=v; e.dispatchEvent(new Event('input',{bubbles:true})); e.dispatchEvent(new Event('change',{bubbles:true})); return e.value;};\nreturn {date:set('date','2026-12-12'), time:set('time','19:00'), party:set('party_size','2'), name:set('name','Nguyễn An'), phone:set('phone','0901234567'), need_otp: document.querySelector('[name=need_otp]').value};\n\"\"\")\nprint(r)\nscreenshot()",
+  "js(\"document.querySelector('button[type=submit]').click(); 'clicked'\")\nwait_for_load()\nimport time; time.sleep(1.5)\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,1500)\"))\nprint(js(\"Array.from(document.querySelectorAll('input')).map(e=>({name:e.name,type:e.type,val:e.value}))\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.0012885050000000001,
+ "learn_ms": 22933.946300006937,
+ "learn_steps": 4,
+ "run_id": "38bd3aed88ed"
+}

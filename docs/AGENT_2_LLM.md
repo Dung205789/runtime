@@ -16,6 +16,24 @@ Mỗi mốc ứng với 1 PR vào `main` và 1 lần cập nhật `docs/status/a
 | **M2** | Harness chạy được 1 lượt hoàn chỉnh trên `s1_simple` (Bước 2) | Cần `mock_sites/READY` có trên `main`. Kiểm tra bằng `git fetch && git merge origin/main`. Trong lúc chờ, test harness trên một trang HTML tạm trong `bench/llm/` |
 | **M3** | Chạy ma trận + `reports/llm.md` (Bước 3–4). Ghi rõ model thắng và chế độ cache thắng vào status | Mở khóa M4 của Agent 1 |
 
+## Tình trạng ngày 25/11: M3 đã xong
+
+Đã chốt trên dữ liệu web thật: model thắng `claude-haiku-5-5`, chế độ cache thắng `actions` (cache quy trình, script chạy thẳng). Báo cáo ở `reports/llm.md`. Phần dưới đây là brief gốc, giữ lại để tham khảo; chỗ nào khác hợp đồng thì theo hợp đồng.
+
+```bash
+uv run python -m bench.llm.report                         # sinh lại reports/llm.md từ results/llm/, không tốn tiền
+uv run python -m bench.llm.guard_check                    # kiểm chứng lớp chặn, bắt buộc trước khi chạy web thật
+uv run python -m bench.llm.guard_check_direct
+uv run python -m bench.llm.real --learn-only              # học quy trình trên web thật (tốn tiền LLM)
+uv run python -m bench.llm.combo --phase 1,2 --reps 5 --busy-ok   # đo, chạy tiếp được khi bị ngắt
+uv run python -m bench.llm.run --dev --plan               # harness mock site, xem trước chi phí
+```
+
+Các file chính:
+- `bench/llms/__init__.py`: `get_llm()`, bảng giá, `cost_usd()`.
+- `bench/llm/guard.py`: lớp chặn gửi đơn. `real.py`, `combo.py`: đo trên web thật. `report.py`, `combo_report.py`: sinh báo cáo.
+- `bench/llm/runner.py`, `run.py`: harness mock site. `budget.py`: chặn ngân sách. `chrome.py`: Chrome local của Agent 2.
+
 ## Thứ tự làm
 
 ### Bước 1 — Adapter LLM (`bench/llms/`), làm trong lúc chờ `mock_sites/READY`

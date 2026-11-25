@@ -1,0 +1,36 @@
+{
+ "task_id": "t05",
+ "site": "s3_spa",
+ "expected": {
+  "date": "2026-12-14",
+  "time": "18:45",
+  "party_size": 2,
+  "name": "Hoàng Mai",
+  "phone": "0977111222"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8803/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint([ (n['role'], n.get('name'), n.get('backendDOMNodeId')) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value') in ('textbox','combobox','button','spinbutton','checkbox','radio','listbox','dialog','link')])",
+  "import time\ntime.sleep(2)\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint([ (n['role']['value'], n.get('name',{}).get('value'), n.get('backendDOMNodeId')) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value') in ('textbox','combobox','button','spinbutton','checkbox','radio','listbox','dialog','link')])\nscreenshot()",
+  "n=17\ncdp('DOM.scrollIntoViewIfNeeded', backendNodeId=n)\nq=cdp('DOM.getBoxModel', backendNodeId=n)['model']['content']\nclick_at_xy(sum(q[0::2])/4, sum(q[1::2])/4)\ntime.sleep(1)\nprint(js(\"document.body.innerText.slice(0,500)\"))\nprint([ (n['role']['value'], n.get('name',{}).get('value'), n.get('backendDOMNodeId')) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value') in ('textbox','combobox','button','spinbutton','dialog')])\nscreenshot()",
+  "def fill(n, text):\n    cdp('DOM.focus', backendNodeId=n)\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', commands=['selectAll'])\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA')\n    type_text(text)\nfill(110,\"14\"); fill(112,\"12\"); fill(114,\"2026\")\ntime.sleep(1)\nprint(js(\"[document.querySelector('input[type=date]')?.value, document.body.innerText.slice(0,400)]\"))\nscreenshot()",
+  "click_at_xy(466,152)\ntype_text(\"14122026\")\ntime.sleep(1)\nprint(js(\"document.querySelector('input[type=date]')?.value\"))\nprint(js(\"document.body.innerText.slice(0,600)\"))\nscreenshot()",
+  "print(js(\"\"\"[...document.querySelectorAll('input,select,button')].map(e=>({tag:e.tagName,type:e.type,id:e.id,name:e.name,val:e.value,aria:e.getAttribute('aria-label'),vis:e.getBoundingClientRect().width>0}))\"\"\"))\nprint(js(\"document.activeElement && (document.activeElement.tagName+' '+document.activeElement.type)\"))",
+  "click_at_xy(470,152)\ntime.sleep(0.3)\nprint(js(\"document.activeElement.id\"))\nfor ch in \"14122026\":\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=ch, code='Digit'+ch, text=ch)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=ch, code='Digit'+ch)\ntime.sleep(0.5)\nprint(js(\"document.getElementById('date').value\"))\nprint(js(\"document.body.innerText.slice(0,500)\"))",
+  "r=js(\"(()=>{const b=document.getElementById('date').getBoundingClientRect();return [b.x,b.y,b.width,b.height,window.innerWidth,window.innerHeight,devicePixelRatio]})()\")\nprint(r)\nprint(js(\"(()=>{const e=document.elementFromPoint(470,152);return e&&e.tagName+' '+e.id})()\"))",
+  "click_at_xy(366,122)\ntime.sleep(0.3)\nprint(js(\"document.activeElement.id\"))\ntype_text(\"14\")\ntime.sleep(0.2)\nprint(js(\"document.getElementById('date').value\"))",
+  "for ch in \"12\":\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=ch, code='Digit'+ch, text=ch)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=ch, code='Digit'+ch)\ntime.sleep(0.2)\nprint(js(\"document.getElementById('date').value\"), js(\"document.activeElement.id\"))\nscreenshot()",
+  "def key(ch):\n    cdp('Input.dispatchKeyEvent', type='keyDown', key=ch, code='Digit'+ch, text=ch)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=ch, code='Digit'+ch)\nclick_at_xy(366,122); time.sleep(0.2)\nkey('1'); key('4'); time.sleep(0.2)\nprint(js(\"document.getElementById('date').value\"))\nkey('1'); key('2'); time.sleep(0.2)\nprint(js(\"document.getElementById('date').value\"))\nkey('2'); key('0'); key('2'); key('6'); time.sleep(0.3)\nprint(js(\"document.getElementById('date').value\"))\nprint(js(\"document.body.innerText.slice(0,500)\"))",
+  "time.sleep(2)\nprint(js(\"document.body.innerText.slice(0,500)\"))\nprint(js(\"[...document.querySelectorAll('button,[role=button],input[type=radio],label,li')].map(e=>(e.tagName+'|'+(e.innerText||e.value||'')+'|'+e.className+'|'+e.disabled)).filter(s=>/\\\\d\\\\d:\\\\d\\\\d/.test(s))\"))",
+  "btn=[b for b in js(\"[...document.querySelectorAll('button.slot')].map(e=>e.innerText)\")]\nprint(len(btn))\nb=js(\"(()=>{const e=[...document.querySelectorAll('button.slot')].find(x=>x.innerText==='18:45');const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()\")\nclick_at_xy(b[0],b[1]); time.sleep(0.5)\nprint(js(\"[...document.querySelectorAll('button.slot')].filter(e=>e.getAttribute('aria-pressed')||e.className!=='slot').map(e=>e.innerText+'|'+e.className+'|'+e.getAttribute('aria-pressed'))\"))\nprint(js(\"document.body.innerText.slice(0,300)\"))\nscreenshot()",
+  "def clickel(sel):\n    r=js(f\"(()=>{{const b=document.querySelector('{sel}').getBoundingClientRect();return [b.x+b.width/2,b.y+b.height/2]}})()\")\n    click_at_xy(r[0],r[1]); time.sleep(0.2)\nclickel('#name'); type_text(\"Hoàng Mai\"); time.sleep(0.2)\nclickel('#phone'); type_text(\"0977111222\"); time.sleep(0.2)\nprint(js(\"[document.getElementById('date').value, document.getElementById('party').value, document.getElementById('name').value, document.getElementById('phone').value]\"))",
+  "clickel('#phone'); time.sleep(0.3)\nprint(js(\"document.activeElement.id\"))\ntype_text(\"0977111222\"); time.sleep(0.3)\nprint(js(\"[document.getElementById('name').value, document.getElementById('phone').value]\"))",
+  "print(js(\"(()=>{const b=document.getElementById('phone').getBoundingClientRect();return [b.x,b.y,b.width,b.height,window.innerHeight,document.activeElement.tagName,document.activeElement.id]})()\"))\nprint(js(\"(()=>{const e=document.elementFromPoint(...[document.getElementById('phone').getBoundingClientRect().x+50,document.getElementById('phone').getBoundingClientRect().y+10]);return e.tagName+' '+e.id+' '+e.className})()\"))",
+  "js(\"document.getElementById('phone').scrollIntoView({block:'center'})\")\ntime.sleep(0.5)\nclickel('#phone'); time.sleep(0.3)\nprint(js(\"document.activeElement.id\"))\ntype_text(\"0977111222\"); time.sleep(0.3)\nprint(js(\"[document.getElementById('date').value, document.getElementById('party').value, document.querySelector('button.slot[aria-pressed=true], button.slot.selected, button.slot.active')?.innerText, document.getElementById('name').value, document.getElementById('phone').value]\"))",
+  "screenshot()",
+  "clickel('#submit'); time.sleep(2)\nprint(js(\"document.body.innerText.slice(0,800)\"))\nprint(js(\"[location.href, document.getElementById('submit')?.disabled]\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.009850385,
+ "learn_ms": 74291.37920000358,
+ "learn_steps": 20,
+ "run_id": "fd78ed02a769"
+}

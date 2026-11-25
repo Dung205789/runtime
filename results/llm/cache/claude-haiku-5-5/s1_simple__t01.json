@@ -1,0 +1,25 @@
+{
+ "task_id": "t01",
+ "site": "s1_simple",
+ "expected": {
+  "date": "2026-12-12",
+  "time": "19:00",
+  "party_size": 2,
+  "name": "Nguyễn An",
+  "phone": "0901234567"
+ },
+ "cells": [
+  "goto_url(\"http://127.0.0.1:8801/\")\nwait_for_load()\nprint(page_info())\nprint(js(\"document.body.innerText.slice(0,2000)\"))\nprint([ (n['role'],n['name']) for n in cdp('Accessibility.getFullAXTree')['nodes'] if n.get('role',{}).get('value') in ('textbox','combobox','button','spinbutton','listbox','radio','checkbox','dialog')][:60])",
+  "screenshot()\nprint(js(\"[...document.querySelectorAll('input,select,textarea,button')].map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,ph:e.placeholder,val:e.value,aria:e.getAttribute('aria-label'),cls:e.className}))\"))",
+  "click_at_xy(462,152)\ntype_text(\"12122026\")\nclick_at_xy(462,250)\ntype_text(\"0700PM\")\nclick_at_xy(700,441)\ntype_text(\"Nguyễn An\")\nclick_at_xy(700,535)\ntype_text(\"0901234567\")\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.value,e.validity&&e.validity.valid])\"))\nscreenshot()",
+  "def setf(id_, text):\n    js(f\"(()=>{{const e=document.getElementById('{id_}'); e.focus(); e.select && e.select(); return true}})()\")\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='a', code='KeyA', modifiers=2, commands=['selectAll'])\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='a', code='KeyA', modifiers=2)\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key='Backspace', code='Backspace')\n    cdp('Input.dispatchKeyEvent', type='keyUp', key='Backspace', code='Backspace')\n    type_text(text)\nsetf('party_size','2')\nsetf('name','Nguyễn An')\nsetf('phone','0901234567')\nprint(js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.value])\"))",
+  "js(\"document.getElementById('date').focus()\")\ncdp('Input.dispatchKeyEvent', type='rawKeyDown', key='1', code='Digit1'); cdp('Input.dispatchKeyEvent', type='char', text='1'); cdp('Input.dispatchKeyEvent', type='keyUp', key='1', code='Digit1')\ncdp('Input.dispatchKeyEvent', type='rawKeyDown', key='2', code='Digit2'); cdp('Input.dispatchKeyEvent', type='char', text='2'); cdp('Input.dispatchKeyEvent', type='keyUp', key='2', code='Digit2')\nprint(js(\"document.getElementById('date').value\"))\nscreenshot()",
+  "def key(ch):\n    code='Digit'+ch\n    cdp('Input.dispatchKeyEvent', type='rawKeyDown', key=ch, code=code)\n    cdp('Input.dispatchKeyEvent', type='char', text=ch)\n    cdp('Input.dispatchKeyEvent', type='keyUp', key=ch, code=code)\nfor ch in \"12\": key(ch)\nfor ch in \"2026\": key(ch)\nprint(repr(js(\"document.getElementById('date').value\")))\nscreenshot()",
+  "js(\"document.getElementById('time').focus()\")\nfor ch in \"0700\": key(ch)\ncdp('Input.dispatchKeyEvent', type='rawKeyDown', key='P', code='KeyP'); cdp('Input.dispatchKeyEvent', type='char', text='P'); cdp('Input.dispatchKeyEvent', type='keyUp', key='P', code='KeyP')\nprint(repr(js(\"document.getElementById('time').value\")))\nscreenshot()",
+  "vals=js(\"[...document.querySelectorAll('input')].map(e=>[e.id,e.value])\")\nprint(vals)\nassert dict(vals)=={'date':'2026-12-12','time':'19:00','party_size':'2','name':'Nguyễn An','phone':'0901234567'}\njs(\"document.getElementById('submit').focus()\")\npress_key('Enter')\nwait_for_load(); wait_for_network_idle()\nprint(page_info()); print(js(\"document.body.innerText.slice(0,1500)\"))\nscreenshot()"
+ ],
+ "learn_cost_usd": 0.005336885,
+ "learn_ms": 30860.64910001005,
+ "learn_steps": 9,
+ "run_id": "4686deffbbf7"
+}
