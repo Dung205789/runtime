@@ -1,0 +1,77 @@
+{
+ "site": "real_kingbbq",
+ "url": "https://kingbbq.vn/dat-ban/",
+ "started_at": "2026-11-25T03:42:04.236593+00:00",
+ "case": {
+  "party": 3,
+  "time": "18:00",
+  "day": "ngày mai",
+  "name": "Khach Thu Nghiem"
+ },
+ "ms": 5888.915415000042,
+ "err": "RuntimeError: UNAVAILABLE: không có chi nhánh khớp chính xác (line 42)",
+ "steps": [
+  {
+   "n": 1,
+   "t": 5.88,
+   "action": "Trang tải xong, script chưa điền gì (giá trị mặc định)",
+   "changed": [
+    "URL: https://kingbbq.vn/dat-ban/",
+    "mặc định: inputDate = 25/11/2026",
+    "mặc định: inputHour = Chọn giờ đặt bàn",
+    "mặc định: inputMinute = 00 ‘",
+    "mặc định: inputRestaurant = — Chọn nhà hàng —",
+    "mặc định: inputNumber = 2"
+   ],
+   "file": "01.png"
+  },
+  {
+   "n": 2,
+   "t": 9.11,
+   "action": "Kết thúc script, chờ 3 giây cho trang ổn định: trạng thái được chấm. Dừng trước nút đặt",
+   "changed": [
+    "cuối: inputDate = 25/11/2026",
+    "cuối: inputHour = Chọn giờ đặt bàn",
+    "cuối: inputMinute = 00 ‘",
+    "cuối: inputRestaurant = --- Chọn nhà hàng ---",
+    "cuối: inputNumber = 2"
+   ],
+   "file": "02.png"
+  }
+ ],
+ "form": [
+  [
+   "submit",
+   "Tìm kiếm"
+  ],
+  [
+   "inputDate",
+   "25/11/2026"
+  ],
+  [
+   "inputMinute",
+   "00 ‘"
+  ],
+  [
+   "inputNumber",
+   "2"
+  ]
+ ],
+ "check": {
+  "name": false,
+  "phone": false,
+  "party": false,
+  "time": false,
+  "date": false
+ },
+ "outcome": "blocked",
+ "guard_blocked": [
+  {
+   "why": "POST not on allowlist",
+   "method": "POST",
+   "url": "kingbbq.vn/"
+  }
+ ],
+ "guard_allowed_posts": [],
+ "guard_submit_attempts": 0
+}
