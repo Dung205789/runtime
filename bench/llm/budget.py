@@ -20,7 +20,8 @@ def records(root: Path = RESULTS) -> list[dict]:
     for f in sorted(root.rglob("*.jsonl")):
         with f.open(encoding="utf-8") as fh:
             out.extend(json.loads(line) for line in fh if line.strip())
-    return out
+    # results/llm/real/shots/runs.jsonl ghi lần chạy lại script (không phải RunRecord, không có "model"): bỏ qua
+    return [r for r in out if "model" in r]
 
 
 def cap_usd() -> float:
