@@ -27,10 +27,21 @@ SCRIPTS = Path("results/llm/real/scripts")
 SITES = {"real_lauphan": "Lẩu Phan", "real_tong": "Tòng", "real_chaoxian": "Chao Xian", "real_lauwang": "Lẩu Wang", "real_kingbbq": "King BBQ"}
 HAIKU = "claude-haiku-5-5"
 WAYS = [
-    ("haiku", "Haiku tự làm từ đầu", "none", "cold", HAIKU),
-    ("replay", "Script qua browser-use", "actions", "replay", None),
-    ("direct", "Script chạy thẳng", "actions", "direct", None),
+    ("haiku", "Haiku tự điền", "none", "cold", HAIKU),
+    ("replay", "Chạy script, qua agent", "actions", "replay", None),
+    ("direct", "Chạy script trực tiếp", "actions", "direct", None),
 ]
+WAY_DESC = {
+    "haiku": "Haiku đọc trang và tự quyết định từng bước. Có gọi Claude.",
+    "replay": "Chạy lại script đã ghi, nhưng vẫn khởi động agent browser-use. Không gọi Claude.",
+    "direct": "Chạy lại script đã ghi thẳng trên trình duyệt, bỏ qua agent. Không gọi Claude, nhanh nhất.",
+}
+
+
+def th(title: str, sub: str = "", right: bool = True) -> str:
+    return f'<th{" class=r" if right else ""}>{title}{f"<span class=th-sub>{sub}</span>" if sub else ""}</th>'
+
+
 FIELD = {
     "selectCoso": "Cơ sở", "address": "Cơ sở", "inputRestaurant": "Nhà hàng",
     "selectSoNguoi": "Số người", "adult": "Số người lớn", "inputNumber": "Số người", "child": "Trẻ em",
@@ -107,7 +118,7 @@ def bars(rows: list[tuple[str, float | None, float | None]]) -> str:
         )
     ticks = "".join(f'<span style="left:{t / scale * 100:.1f}%">{t:g}</span>' for t in range(0, int(scale) + 1, int(scale // 4) or 1))
     out.append(f'<div class="bar-row axis"><span class="bar-label"></span><div class="bar-ticks">{ticks}</div><span class="bar-val"></span></div>')
-    out.append('<p class="legend"><span class="key p50"></span>p50 <span class="key p95"></span>p95 (giây, chỉ lượt đúng)</p></div>')
+    out.append('<p class="legend"><span class="key p50"></span>thời gian điển hình <span class="key p95"></span>lần chậm (giây, chỉ tính lần điền đúng)</p></div>')
     return "".join(out)
 
 
@@ -193,7 +204,7 @@ def build() -> str:
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>{CSS}</style>
 <nav class="topnav"><div class="wrap nav-in"><span class="brand">Agent 2 · Claude đặt bàn</span>
-<a href="#ket-luan">Kết luận</a><a href="#cach-do">Cách đo</a><a href="#haiku">Haiku</a><a href="#cache">Script ghi nhớ</a><a href="#script-v2">Sửa script</a><a href="#tung-web">Từng web</a><a href="#luu-y">Lưu ý</a></div></nav>
+<a href="#ket-luan">Kết luận</a><a href="#cach-do">Cách đo</a><a href="#haiku">Haiku tự điền</a><a href="#cache">Script ghi nhớ</a><a href="#script-v2">Sửa script</a><a href="#tung-web">Từng web</a><a href="#luu-y">Lưu ý</a></div></nav>
 <main class="wrap">
 <header class="head" id="ket-luan">
 <p class="eyebrow">Module chọn công nghệ · agent đặt bàn · trục LLM &amp; cache</p>
@@ -201,8 +212,8 @@ def build() -> str:
 <p class="lede">Agent dùng Claude Haiku 5.5 đọc trang đặt bàn và tự điền form trên 5 web nhà hàng thật. Lần đầu ở mỗi web, Haiku làm từ đầu. Sau một lần làm đúng, cách làm được ghi lại thành script. Những lần sau chỉ cần chạy script, không phải hỏi lại Haiku.</p>
 <div class="verdict">
  <div class="v-card"><span class="v-k">Model chọn</span><span class="v-v">Claude Haiku 5.5</span>
-  <p class="v-d">Điền đúng <b class="num">{H['ok']}/{H['scored']}</b> lượt chấm được. Một lượt thường mất khoảng <b class="num">{f1(H['p50'])} giây</b> và tốn khoảng <b class="num">{money(H['cps'])}</b>.</p></div>
- <div class="v-card"><span class="v-k">Cách lưu cho lần sau</span><span class="v-v">Script ghi nhớ, chạy thẳng</span>
+  <p class="v-d">Điền đúng <b class="num">{H['ok']}/{H['scored']}</b> lượt chấm được. Mỗi lần điền thường mất khoảng <b class="num">{f1(H['p50'])} giây</b> và tốn khoảng <b class="num">{money(H['cps'])}</b>.</p></div>
+ <div class="v-card"><span class="v-k">Cách lưu cho lần sau</span><span class="v-v">Chạy script trực tiếp</span>
   <p class="v-d">Đúng <b class="num">{W['direct']['ok']}/{W['direct']['scored']}</b> lượt, thường mất <b class="num">{f1(W['direct']['p50'])} giây</b>, không tốn tiền gọi Claude. Có lời sau <b class="num">{min(ns)}–{max(ns)}</b> lần đặt ở cùng một web.</p></div>
 </div>
 <p class="note">Đã dùng <b class="num">{money(spend, 2)}</b> trong ngân sách $1,80 cho Claude. Claude Sonnet 5.5 chưa được đo.</p>
@@ -227,20 +238,20 @@ def build() -> str:
  <dt>Điền sai</dt><dd>Form có ô không khớp, ví dụ sai giờ. Đây là lỗi nặng nhất, vì khách sẽ nhận một đơn sai.</dd>
  <dt>Từ chối</dt><dd>Script biết mình không làm được nên dừng và giao lại cho Haiku. Không phải lỗi.</dd>
  <dt>Không chấm được</dt><dd>Chương trình chấm không đọc được ô trên form, nên không biết đúng hay sai. Không tính vào tỷ lệ đúng.</dd>
- <dt>Thời gian thường gặp (p50)</dt><dd>Một nửa số lượt xong nhanh hơn mức này.</dd>
- <dt>Lượt chậm (p95)</dt><dd>Gần như mọi lượt xong trước mức này. Với 25 lượt, con số này gần bằng lượt chậm nhất.</dd>
+ <dt>Thời gian điển hình (p50)</dt><dd>Một nửa số lần xong nhanh hơn mức này.</dd>
+ <dt>Lần chậm (p95)</dt><dd>Gần như mọi lần xong trước mức này. Với 25 lần đo, con số này gần bằng lần chậm nhất.</dd>
 </dl></section>""")
 
     # ---------- haiku ----------
-    h.append(f"""<section id="haiku"><h2>Haiku tự làm từ đầu</h2>
+    h.append(f"""<section id="haiku"><h2>Haiku tự điền</h2><p class="sub">Haiku đọc trang và tự quyết định bấm, gõ gì ở từng bước. Đây là cách dùng cho lần đầu ở một web.</p>
 <div class="facts">
  <div><span class="f-v num">{H['ok']}/{H['scored']}</span><span class="f-k">lượt đúng trên số lượt chấm được ({H['unscored']} lượt không chấm được, xem Lưu ý)</span></div>
- <div><span class="f-v num">{f1(H['p50'])} s</span><span class="f-k">thời gian thường gặp; lượt chậm {f1(H['p95'])} s</span></div>
+ <div><span class="f-v num">{f1(H['p50'])} s</span><span class="f-k">thời gian điển hình; lần chậm {f1(H['p95'])} s</span></div>
  <div><span class="f-v num">{money(H['cps'])}</span><span class="f-k">chi phí Claude cho một lượt đúng</span></div>
- <div><span class="f-v num">{H['calls']}</span><span class="f-k">lần gọi Claude trong một lượt (thường gặp), mất khoảng {f1(H['llm_s'])} s chờ Claude trả lời</span></div>
+ <div><span class="f-v num">{H['calls']}</span><span class="f-k">lần gọi Claude trong một lần điền (điển hình), mất khoảng {f1(H['llm_s'])} s chờ Claude trả lời</span></div>
 </div>
 <p class="sub">Phần thời gian còn lại là khởi động agent và chờ trang web tải. Haiku cũng qua bài kiểm tra mã OTP trên trang thử: dừng lại hỏi người đúng lúc <b class="num">{sum(bool(r.get('paused_for_otp')) for r in otp)}/{len(otp)}</b> lần, không tự đoán mã.</p>
-<div class="tbl"><table><thead><tr><th>Web</th><th class="r">Lượt đúng</th><th class="r">Thời gian thường gặp</th><th class="r">Lượt chậm nhất</th><th class="r">Chi phí / lượt</th></tr></thead><tbody>""")
+<div class="tbl"><table><thead><tr><th>Web</th>""" + th("Điền đúng", "số lần đúng / số lần chấm được") + th("Thời gian điển hình", "một nửa số lần nhanh hơn") + th("Lần chậm nhất", "trong các lần điền đúng") + th("Chi phí Claude", "trung bình mỗi lần") + "</tr></thead><tbody>")
     for site, name in SITES.items():
         rows = [r for r in kind(R, "cold", HAIKU) if r["site"] == site]
         x = stat(rows)
@@ -251,12 +262,12 @@ def build() -> str:
 
     # ---------- cache ----------
     h.append(f"""<section id="cache"><h2>Script ghi nhớ cho lần sau</h2>
-<p class="sub">So sánh cùng yêu cầu đặt bàn: Haiku tự làm từ đầu, và chạy script đã ghi nhớ. Script có thể chạy qua browser-use (cùng bộ khung với agent) hoặc chạy thẳng trên trình duyệt; chạy thẳng nhanh hơn vì bỏ được bước khởi động agent.</p>""")
+<p class="sub">Cùng một yêu cầu đặt bàn, điền theo 3 cách:</p>""")
     h.append(bars([(W[k]["label"], W[k]["p50"], W[k]["p95"]) for k, *_ in WAYS]))
-    h.append('<div class="tbl"><table><thead><tr><th>Cách</th><th class="r">Lượt đúng</th><th class="r">Thời gian thường gặp</th><th class="r">Lượt chậm</th><th class="r">Chi phí / lượt</th></tr></thead><tbody>')
+    h.append('<div class="tbl"><table><thead><tr>' + th("Cách điền form", "làm gì", False) + th("Điền đúng", "số lần đúng / số lần chấm được") + th("Thời gian điển hình", "một nửa số lần nhanh hơn") + th("Lần chậm", "gần như mọi lần nhanh hơn") + th("Chi phí Claude", "trung bình mỗi lần") + "</tr></thead><tbody>")
     for key, *_ in WAYS:
         w = W[key]
-        h.append(f'<tr><td>{E(w["label"])}</td><td class="r num">{w["ok"]}/{w["scored"]}</td><td class="r num">{f1(w["p50"])} s</td><td class="r num">{f1(w["p95"])} s</td><td class="r num">{money(w["cpr"])}</td></tr>')
+        h.append(f'<tr><td><b>{E(w["label"])}</b><span class="td-sub">{E(WAY_DESC[key])}</span></td><td class="r num">{w["ok"]}/{w["scored"]}</td><td class="r num">{f1(w["p50"])} s</td><td class="r num">{f1(w["p95"])} s</td><td class="r num">{money(w["cpr"])}</td></tr>')
     h.append(f"""</tbody></table></div>
 <h3>Khi dữ liệu khách thay đổi</h3>
 <p class="sub">Script được thử với {len(chk)} yêu cầu khác nhau (số người, giờ, ngày, tên, chi nhánh khác), mỗi web 10–12 yêu cầu, gồm cả yêu cầu cố ý không hợp lệ như 03:00 sáng.</p>
@@ -268,7 +279,7 @@ def build() -> str:
 </div>
 <h3>Bao lâu thì có lời</h3>
 <p class="sub">Ghi nhớ có giá: phải cho Haiku làm một lần rồi sinh script. Sau đó mỗi lần dùng script tiết kiệm được tiền gọi Claude. Ví dụ {E(SITES[ex_site])}: ghi nhớ tốn <b class="num">{money(ex['learn'])}</b>, mỗi lần dùng script tiết kiệm <b class="num">{money(ex['save'])}</b>, nên từ lần đặt thứ <b class="num">{ex['n']}</b> là có lời.</p>
-<div class="tbl"><table><thead><tr><th>Web</th><th class="r">Chi phí ghi nhớ</th><th class="r">Tiết kiệm mỗi lần</th><th class="r">Có lời từ lần thứ</th></tr></thead><tbody>""")
+<div class="tbl"><table><thead><tr><th>Web</th>""" + th("Chi phí ghi nhớ", "Haiku làm 1 lần + viết script") + th("Tiết kiệm mỗi lần", "so với Haiku tự điền") + th("Có lời từ lần đặt thứ") + "</tr></thead><tbody>")
     for site, name in SITES.items():
         b = bev[site]
         if b:
@@ -454,6 +465,11 @@ td small{color:var(--muted);font-size:11px}
 .code summary{cursor:pointer;font-size:11px;color:var(--muted)}
 .code code{display:block;margin-top:4px;font-family:var(--f-mono);font-variant-ligatures:none;font-size:10.5px;color:var(--muted);overflow-wrap:anywhere;white-space:pre-wrap}
 @media (max-width:600px){.glossary{grid-template-columns:1fr}.glossary dd{margin-bottom:6px}}
+.th-sub{display:block;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--muted);white-space:normal;margin-top:2px}
+.td-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px;max-width:46ch}
+.ways{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:4px 14px;margin:0;font-size:13px}
+.ways dt{font-weight:600}.ways dd{margin:0;color:var(--muted)}
+@media (max-width:600px){.ways{grid-template-columns:1fr}.ways dd{margin-bottom:6px}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 """
 
