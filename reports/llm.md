@@ -161,17 +161,17 @@ Chi phí combo: {'claude-haiku-5-5': 0.2097, 'none': 0.0, 'gemini-3.5-flash-lite
 
 Sinh bởi `uv run python -m bench.llm.shots`; ảnh và từng bước ở `results/llm/real/shots/`, xem kèm ảnh trong `results/llm/real/llm_web.xlsx`.
 
-| Web | Lần chạy | Kết quả | Trường sai | Ảnh | Request bị lớp chặn chặn | Dữ liệu khách định rời trang |
+| Web | Số lần | Đúng | Từ chối (blocked) | Sai (wrong_data) | Hỏng (failed) | Dữ liệu khách định rời trang |
 |---|---|---|---|---|---|---|
-| lauphan | lần 1 | wrong_data | time | 9 | 0 | 0 |
-| lauphan | lần cuối | success | — | 9 | 0 | 0 |
-| tong | lần cuối | success | — | 8 | 0 | 0 |
-| chaoxian | lần cuối | success | — | 9 | 0 | 0 |
-| lauwang | lần cuối | success | — | 9 | 0 | 0 |
-| kingbbq | lần cuối | success | — | 10 | 1 | 0 |
+| lauphan | 9 | 9 | 0 | 0 | 0 | 0 |
+| tong | 4 | 4 | 0 | 0 | 0 | 0 |
+| chaoxian | 4 | 4 | 0 | 0 | 0 | 0 |
+| lauwang | 4 | 4 | 0 | 0 | 0 | 0 |
+| kingbbq | 9 | 6 | 3 | 0 | 0 | 0 |
 
 Quan sát từ ảnh (không phải số đo):
-- **Lẩu Phan**: script kết thúc khi ô Giờ còn đang tải; danh sách giờ tải xong thì ghi đè lựa chọn về 'Chọn'. Lỗi chập chờn (lần 1 sai, lần 2 đúng). Cần sửa script: chờ ô Giờ hết tải rồi mới chọn, và kiểm tra lại giá trị ở cuối.
+- **Lẩu Phan**: một lần chạy lại trước loạt trên (không nằm trong bảng) bị sai giờ: script kết thúc khi ô Giờ còn đang tải, tải xong thì giờ bị đặt về 'Chọn'. Lỗi chập chờn. Cần sửa script: chờ ô Giờ tải xong rồi mới chọn, và kiểm tra lại giá trị ở cuối.
+- **King BBQ**: script chọn nhà hàng khi danh sách nhà hàng chưa tải xong, nên có lần tự từ chối ('không có chi nhánh khớp chính xác') và chuyển sang LLM. Không điền sai.
 - **Lẩu Wang**: ô `<select>` gốc có giờ và cơ sở đúng, nhưng widget hiển thị vẫn ghi 'Giờ' / 'Chọn cơ sở'. Chưa biết web có nhận giá trị khi bấm đặt hay không.
 
 ## 8. Chưa kiểm chứng

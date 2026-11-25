@@ -1,96 +1,96 @@
 {
  "site": "real_lauphan",
  "url": "https://lauphan.com/dat-ban?type=lauphan",
+ "started_at": "2026-11-25T03:40:16.558511+00:00",
  "case": {
   "party": 3,
   "time": "18:00",
   "day": "ngày mai",
   "name": "Khach Thu Nghiem"
  },
- "ms": 10489.667887999985,
+ "ms": 10294.346906999977,
  "err": null,
  "steps": [
   {
    "n": 1,
-   "t": 2.91,
-   "action": "goto_url(https://lauphan.com/dat-ban?type=lauphan)",
+   "t": 4.87,
+   "action": "Trang tải xong, script chưa điền gì (giá trị mặc định)",
    "changed": [
-    "URL → https://lauphan.com/dat-ban?type=lauphan"
+    "URL: https://lauphan.com/dat-ban?type=lauphan",
+    "mặc định: selectCoso = Chọn",
+    "mặc định: selectSoNguoi = 1",
+    "mặc định: selectDay = Hôm nay",
+    "mặc định: selectHour = Chọn"
    ],
    "file": "01.png"
   },
   {
    "n": 2,
-   "t": 4.71,
-   "action": "wait_for_load()",
+   "t": 5.13,
+   "action": "js((()=>{const s=document.getElementById(\"selectCoso\"); s.value=\"5b86181d441ef51234e765da\"; s.dispatchEvent(new Event('inp…)",
    "changed": [
-    "selectCoso = Chọn",
-    "selectSoNguoi = 1",
-    "selectDay = Hôm nay",
-    "selectHour = Chọn"
+    "selectCoso = Lẩu Phan Hoàng Quốc Việt"
    ],
    "file": "02.png"
   },
   {
    "n": 3,
-   "t": 5.0,
-   "action": "js((()=>{const s=document.getElementById(\"selectCoso\"); s.value=\"5b86181d441ef51234e765da\"; s.dispatchEvent(new Event('inp…)",
+   "t": 6.5,
+   "action": "js((()=>{const s=document.getElementById(\"selectSoNguoi\"); s.value=\"3\"; s.dispatchEvent(new Event('input',{bubbles:true}))…)",
    "changed": [
-    "selectCoso = Lẩu Phan Hoàng Quốc Việt"
+    "selectSoNguoi = 3"
    ],
    "file": "03.png"
   },
   {
    "n": 4,
-   "t": 6.37,
-   "action": "js((()=>{const s=document.getElementById(\"selectSoNguoi\"); s.value=\"3\"; s.dispatchEvent(new Event('input',{bubbles:true}))…)",
+   "t": 7.9,
+   "action": "js((()=>{const s=document.getElementById(\"selectDay\"); s.value=\"1\"; s.dispatchEvent(new Event('input',{bubbles:true})); s.…)",
    "changed": [
-    "selectSoNguoi = 3"
+    "selectDay = Ngày mai"
    ],
    "file": "04.png"
   },
   {
    "n": 5,
-   "t": 7.74,
-   "action": "js((()=>{const s=document.getElementById(\"selectDay\"); s.value=\"1\"; s.dispatchEvent(new Event('input',{bubbles:true})); s.…)",
+   "t": 9.26,
+   "action": "js((()=>{const s=document.getElementById(\"selectHour\"); s.value=\"18:00:00\"; s.dispatchEvent(new Event('input',{bubbles:tru…)",
    "changed": [
-    "selectDay = Ngày mai"
+    "selectHour = 18:00"
    ],
    "file": "05.png"
   },
   {
    "n": 6,
-   "t": 9.09,
-   "action": "js((()=>{const s=document.getElementById(\"selectHour\"); s.value=\"18:00:00\"; s.dispatchEvent(new Event('input',{bubbles:tru…)",
+   "t": 9.52,
+   "action": "type_text(Khach Thu Nghiem)",
    "changed": [
-    "selectHour = 18:00"
+    "nameOrder = Khach Thu Nghiem"
    ],
    "file": "06.png"
   },
   {
    "n": 7,
-   "t": 9.36,
-   "action": "type_text(Khach Thu Nghiem)",
+   "t": 9.78,
+   "action": "type_text(0000000000)",
    "changed": [
-    "nameOrder = Khach Thu Nghiem"
+    "sdtOrder = 0000000000"
    ],
    "file": "07.png"
   },
   {
    "n": 8,
-   "t": 9.63,
-   "action": "type_text(0000000000)",
+   "t": 13.51,
+   "action": "Kết thúc script, chờ 3 giây cho trang ổn định: trạng thái được chấm. Dừng trước nút đặt",
    "changed": [
-    "sdtOrder = 0000000000"
+    "cuối: selectCoso = Lẩu Phan Hoàng Quốc Việt",
+    "cuối: selectSoNguoi = 3",
+    "cuối: selectDay = Ngày mai",
+    "cuối: selectHour = 18:00",
+    "cuối: nameOrder = Khach Thu Nghiem",
+    "cuối: sdtOrder = 0000000000"
    ],
    "file": "08.png"
-  },
-  {
-   "n": 9,
-   "t": 10.37,
-   "action": "kết thúc script: form đã điền, dừng trước nút đặt",
-   "changed": [],
-   "file": "09.png"
   }
  ],
  "form": [

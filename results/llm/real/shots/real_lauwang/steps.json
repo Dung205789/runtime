@@ -1,94 +1,94 @@
 {
  "site": "real_lauwang",
  "url": "https://lauwang.vn/dat-ban/",
+ "started_at": "2026-11-25T03:41:05.277172+00:00",
  "case": {
   "party": 3,
   "time": "18:00",
   "day": "ngày mai",
   "name": "Khach Thu Nghiem"
  },
- "ms": 8583.347653999994,
+ "ms": 7539.118692999978,
  "err": null,
  "steps": [
   {
    "n": 1,
-   "t": 2.47,
-   "action": "new_tab(https://lauwang.vn/dat-ban/)",
+   "t": 4.22,
+   "action": "Trang tải xong, script chưa điền gì (giá trị mặc định)",
    "changed": [
-    "URL → https://lauwang.vn/dat-ban/"
+    "URL: https://lauwang.vn/dat-ban/",
+    "mặc định: time = Giờ",
+    "mặc định: address = Chọn cơ sở"
    ],
    "file": "01.png"
   },
   {
    "n": 2,
-   "t": 4.32,
-   "action": "wait_for_load()",
+   "t": 4.62,
+   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"address\\\"]\");if(!s)return {st:'NF'}; const W=[\"51A H\\u1ed3 T\\u00f9n…)",
    "changed": [
-    "time = Giờ",
-    "address = Chọn cơ sở"
+    "address = 51A Hồ Tùng Mậu, HN"
    ],
    "file": "02.png"
   },
   {
    "n": 3,
-   "t": 4.67,
-   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"address\\\"]\");if(!s)return {st:'NF'}; const W=[\"51A H\\u1ed3 T\\u00f9n…)",
+   "t": 5.03,
+   "action": "js((()=>{const e=document.querySelector(\"[name=\\\"date\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTextAreaE…)",
    "changed": [
-    "address = 51A Hồ Tùng Mậu, HN"
+    "date = 26/11/2026"
    ],
    "file": "03.png"
   },
   {
    "n": 4,
-   "t": 5.06,
-   "action": "js((()=>{const e=document.querySelector(\"[name=\\\"date\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTextAreaE…)",
+   "t": 5.42,
+   "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"adult\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTex…)",
    "changed": [
-    "date = 26/11/2026"
+    "adult = 3"
    ],
    "file": "04.png"
   },
   {
    "n": 5,
-   "t": 5.44,
-   "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"adult\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTex…)",
+   "t": 6.71,
+   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"time\\\"]\");if(!s)return {st:'NF'}; const W=[\"18:00\"]; const hit=W.ma…)",
    "changed": [
-    "adult = 3"
+    "time = 18:00"
    ],
    "file": "05.png"
   },
   {
    "n": 6,
-   "t": 6.76,
-   "action": "js((()=>{const s=document.querySelector(\"select[name=\\\"time\\\"]\");if(!s)return {st:'NF'}; const W=[\"18:00\"]; const hit=W.ma…)",
+   "t": 7.12,
+   "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"your-name\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTM…)",
    "changed": [
-    "time = 18:00"
+    "your-name = Khach Thu Nghiem"
    ],
    "file": "06.png"
   },
   {
    "n": 7,
-   "t": 7.2,
-   "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"your-name\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTM…)",
+   "t": 7.53,
+   "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"phone\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTex…)",
    "changed": [
-    "your-name = Khach Thu Nghiem"
+    "phone = 0000000000"
    ],
    "file": "07.png"
   },
   {
    "n": 8,
-   "t": 7.59,
-   "action": "js((()=>{const e=document.querySelector(\"input[name=\\\"phone\\\"]\");if(!e)return 'NF'; const p=e.tagName==='TEXTAREA'?HTMLTex…)",
+   "t": 10.95,
+   "action": "Kết thúc script, chờ 3 giây cho trang ổn định: trạng thái được chấm. Dừng trước nút đặt",
    "changed": [
-    "phone = 0000000000"
+    "cuối: your-name = Khach Thu Nghiem",
+    "cuối: phone = 0000000000",
+    "cuối: date = 26/11/2026",
+    "cuối: time = 18:00",
+    "cuối: address = 51A Hồ Tùng Mậu, HN",
+    "cuối: adult = 3"
    ],
    "file": "08.png"
-  },
-  {
-   "n": 9,
-   "t": 8.05,
-   "action": "kết thúc script: form đã điền, dừng trước nút đặt",
-   "changed": [],
-   "file": "09.png"
   }
  ],
  "form": [

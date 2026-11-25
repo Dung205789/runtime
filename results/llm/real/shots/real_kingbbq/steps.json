@@ -1,106 +1,108 @@
 {
  "site": "real_kingbbq",
  "url": "https://kingbbq.vn/dat-ban/",
+ "started_at": "2026-11-25T03:41:51.158080+00:00",
  "case": {
   "party": 3,
   "time": "18:00",
   "day": "ngày mai",
   "name": "Khach Thu Nghiem"
  },
- "ms": 16670.74922400002,
+ "ms": 19933.44283400006,
  "err": null,
  "steps": [
   {
    "n": 1,
-   "t": 5.11,
-   "action": "new_tab(https://kingbbq.vn/dat-ban/)",
+   "t": 13.37,
+   "action": "Trang tải xong, script chưa điền gì (giá trị mặc định)",
    "changed": [
-    "URL → https://kingbbq.vn/dat-ban/"
+    "URL: https://kingbbq.vn/dat-ban/",
+    "mặc định: inputDate = 25/11/2026",
+    "mặc định: inputHour = Chọn giờ đặt bàn",
+    "mặc định: inputMinute = 00 ‘",
+    "mặc định: inputRestaurant = --- Chọn nhà hàng ---",
+    "mặc định: inputNumber = 2"
    ],
    "file": "01.png"
   },
   {
    "n": 2,
-   "t": 9.38,
-   "action": "wait_for_load()",
+   "t": 13.63,
+   "action": "js((()=>{const s=document.getElementById(\"inputRestaurant\"); const o=[...s.options].find(o=>(o.value==='48')); if(!o)retur…)",
    "changed": [
-    "inputDate = 25/11/2026",
-    "inputHour = Chọn giờ đặt bàn",
-    "inputMinute = 00 ‘",
-    "inputRestaurant = --- Chọn nhà hàng ---",
-    "inputNumber = 2"
+    "inputRestaurant = King Deli1 Bà Triệu - Tầng 5, Vincom Center, 191 Bà Triệu, Hai Bà Trưng, Hà Nội"
    ],
    "file": "02.png"
   },
   {
    "n": 3,
-   "t": 9.67,
-   "action": "js((()=>{const s=document.getElementById(\"inputRestaurant\"); const o=[...s.options].find(o=>(o.value==='48')); if(!o)retur…)",
+   "t": 14.42,
+   "action": "type_text(26/11/2026)",
    "changed": [
-    "inputRestaurant = King Deli1 Bà Triệu - Tầng 5, Vincom Center, 191 Bà Triệu, Hai Bà Trưng, Hà Nội"
+    "inputDate = 26/11/2026"
    ],
    "file": "03.png"
   },
   {
    "n": 4,
-   "t": 10.47,
-   "action": "type_text(26/11/2026)",
+   "t": 15.52,
+   "action": "type_text(3)",
    "changed": [
-    "inputDate = 26/11/2026"
+    "inputNumber = 3"
    ],
    "file": "04.png"
   },
   {
    "n": 5,
-   "t": 11.58,
-   "action": "type_text(3)",
+   "t": 16.63,
+   "action": "type_text(Khach Thu Nghiem)",
    "changed": [
-    "inputNumber = 3"
+    "inputName = Khach Thu Nghiem"
    ],
    "file": "05.png"
   },
   {
    "n": 6,
-   "t": 12.7,
-   "action": "type_text(Khach Thu Nghiem)",
+   "t": 17.19,
+   "action": "type_text(0000000000)",
    "changed": [
-    "inputName = Khach Thu Nghiem"
+    "inputPhone = 0000000000"
    ],
    "file": "06.png"
   },
   {
    "n": 7,
-   "t": 13.26,
-   "action": "type_text(0000000000)",
+   "t": 17.76,
+   "action": "type_text(benchmark@example.invalid)",
    "changed": [
-    "inputPhone = 0000000000"
+    "inputEmail = benchmark@example.invalid"
    ],
    "file": "07.png"
   },
   {
    "n": 8,
-   "t": 13.82,
-   "action": "type_text(benchmark@example.invalid)",
+   "t": 19.54,
+   "action": "js((()=>{const s=document.getElementById(\"inputHour\"); const o=[...s.options].find(o=>(o.value===\"18\")); if(!o)return 'NOT…)",
    "changed": [
-    "inputEmail = benchmark@example.invalid"
+    "inputHour = 18 H"
    ],
    "file": "08.png"
   },
   {
    "n": 9,
-   "t": 15.6,
-   "action": "js((()=>{const s=document.getElementById(\"inputHour\"); const o=[...s.options].find(o=>(o.value===\"18\")); if(!o)return 'NOT…)",
+   "t": 23.23,
+   "action": "Kết thúc script, chờ 3 giây cho trang ổn định: trạng thái được chấm. Dừng trước nút đặt",
    "changed": [
-    "inputHour = 18 H"
+    "cuối: inputName = Khach Thu Nghiem",
+    "cuối: inputEmail = benchmark@example.invalid",
+    "cuối: inputPhone = 0000000000",
+    "cuối: inputDate = 26/11/2026",
+    "cuối: inputHour = 18 H",
+    "cuối: inputMinute = 00 ‘",
+    "cuối: inputRestaurant = King Deli1 Bà Triệu - Tầng 5, Vincom Center, 191 Bà Triệu, Hai Bà Trưng, Hà Nội",
+    "cuối: inputNumber = 3"
    ],
    "file": "09.png"
-  },
-  {
-   "n": 10,
-   "t": 16.26,
-   "action": "kết thúc script: form đã điền, dừng trước nút đặt",
-   "changed": [],
-   "file": "10.png"
   }
  ],
  "form": [

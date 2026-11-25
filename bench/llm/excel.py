@@ -130,6 +130,17 @@ def breakeven(R, site):
     return round(learn, 4), math.ceil(learn / save)
 
 
+def tally(site) -> str:
+    f = SHOTS / "runs.jsonl"
+    rows = [json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()] if f.exists() else []
+    rows = [r for r in rows if r["site"] == site]
+    if not rows:
+        return "chưa chạy"
+    c = Counter(r["outcome"] for r in rows)
+    extra = ", ".join(f"{k} {v}" for k, v in c.items() if k != "success")
+    return f"{c['success']}/{len(rows)} đúng" + (f" ({extra})" if extra else "")
+
+
 def shot_data(site, sub=""):
     f = SHOTS / site / sub / "steps.json"
     return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
@@ -212,10 +223,11 @@ def site_sheet(wb, R, site, name):
     S.table(["Ca", "Kết quả", "Giá trị form", "Lý do script từ chối", "", "Giây", "", "", "Trường không khớp"], rows, fills)
 
     d = shot_data(site)
-    S.title("4. Từng bước kèm ảnh (chạy lại script cache ngày 25/11, không gọi LLM)", SUB)
+    S.title(f"4. Từng bước kèm ảnh (chạy lại script cache ngày 25/11, không gọi LLM; các lần chạy lại: {tally(site)})", SUB)
     if not d:
         S.text("Chưa có ảnh. Chạy: uv run python -m bench.llm.shots " + site)
         return
+    S.text("Ảnh chỉ chụp khi trang đổi. Bước đầu: trang vừa tải xong (giá trị mặc định, không viền). Bước cuối: chờ 3 giây rồi chụp, đúng trạng thái được chấm.")
     S.text(f"Kết quả lần chạy này: {d['outcome']} — {round(d['ms'] / 1000, 1)} s. Lỗi: {d['err'] or 'không'}. "
            f"Lớp chặn: {len(d['guard_blocked'])} request bị chặn, {d['guard_submit_attempts']} lần dữ liệu khách định rời trang.",
            OK if d["outcome"] == "success" else BAD)
@@ -226,7 +238,8 @@ def site_sheet(wb, R, site, name):
     steps_block(S, site, d, SHOTS / site)
     bad = shot_data(site, "run_loi")
     if bad:
-        S.title(f"5. Lần chạy lỗi (cũng ngày 25/11): {bad['outcome']}, trường sai: {', '.join(k for k, x in bad['check'].items() if not x)}", SUB)
+        wrong = ", ".join(k for k, x in bad["check"].items() if not x)
+        S.title(f"5. Một lần chạy lại không đúng: {bad['outcome']}" + (f", lỗi: {bad['err']}" if bad["err"] else f", trường sai: {wrong}"), SUB)
         S.text("Form cuối: " + "; ".join(f"{a}={b}" for a, b in bad["form"]), BAD)
         steps_block(S, site, bad, SHOTS / site / "run_loi")
     sc = SCRIPTS / f"{site}.json"
@@ -245,8 +258,12 @@ NOTES = {
         "Người nhìn màn hình sẽ thấy như chưa chọn. Chưa thử bấm đặt nên chưa biết web có nhận giá trị hay không.",
     ],
     "real_lauphan": [
-        "Chạy 2 lần: lần đầu giờ bị reset về 'Chọn' (wrong_data), lần hai đúng. Ảnh lần lỗi (mục 5) cho thấy ô Giờ đang quay vòng tải "
-        "khi script kết thúc: script không chờ danh sách giờ tải xong nên lựa chọn bị ghi đè.",
+        "Một lần chạy lại trước loạt này (không nằm trong số đếm) bị sai giờ: script kết thúc khi ô Giờ còn đang tải, "
+        "tải xong thì giờ bị đặt lại về 'Chọn'. Script không chờ danh sách giờ tải xong: lỗi chập chờn.",
+    ],
+    "real_kingbbq": [
+        "Có lần script từ chối 'không có chi nhánh khớp chính xác': script chọn nhà hàng ngay khi form vừa hiện, lúc danh sách nhà hàng "
+        "chưa tải xong. Từ chối thì chuyển sang LLM chạy chay, không điền sai.",
     ],
 }
 
@@ -271,7 +288,7 @@ def summary_sheet(wb, R):
         d = shot_data(site)
         ok_chk = sum(r["outcome"] == "success" for r in chk)
         rows.append([name, *cells, f"{ok_chk}/{len(chk)} đúng, {sum(r['outcome'] == 'wrong_data' for r in chk)} sai", n,
-                     (d["outcome"] if d else "chưa chạy") + (" (lần 1 lỗi)" if shot_data(site, "run_loi") else ""), " ".join(NOTES.get(site, []))[:300]])
+                     tally(site), " ".join(NOTES.get(site, []))[:300]])
         fills.append(WARN if NOTES.get(site) else None)
     S.table(["Web", *(w[0] for w in WAYS), "Script khi đổi dữ liệu", "Hòa vốn N*", "Chạy lại 25/11", "Lưu ý"], rows, fills)
     S.text("Màu: xanh = đúng hết; đỏ = có lượt sai/hỏng; vàng = không chấm được hoặc cần lưu ý. Chi tiết và ảnh: mỗi web 1 sheet.")

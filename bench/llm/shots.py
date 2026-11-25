@@ -6,13 +6,16 @@ Từ chối chạy nếu bằng chứng kiểm chứng lớp chặn không khớ
 
     uv run python -m bench.llm.shots            # cả 5 web
     uv run python -m bench.llm.shots real_tong  # một web
+    uv run python -m bench.llm.shots --reps 3   # mỗi web 3 lần; mọi lần ghi vào shots/runs.jsonl
 Ảnh: results/llm/real/shots/<site>/NN.png, bước: results/llm/real/shots/<site>/steps.json
 """
 from __future__ import annotations
 
 import asyncio
+import argparse
 import hashlib
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -21,6 +24,7 @@ from bench.llm.combo import BASE, SAFE_ENV, Direct, best_snap, check, guard_fiel
 from bench.llm import real as R
 
 OUT = Path("results/llm/real/shots")
+LOG = OUT / "runs.jsonl"
 
 
 class ShotDirect(Direct):
@@ -38,11 +42,11 @@ class ShotDirect(Direct):
         return self
 
 
-async def shoot(site: str) -> dict:
+async def shoot(site: str, out_dir: Path) -> dict:
     st = load_script(site)
     if not st.get("script"):
         return {"site": site, "error": "chưa có script cache"}
-    out_dir = OUT / site
+    out_dir.mkdir(parents=True, exist_ok=True)
     for f in out_dir.glob("*.png"):
         f.unlink()
     async with ShotDirect() as d:
@@ -55,7 +59,8 @@ async def shoot(site: str) -> dict:
         blocked = list(d.guard.blocked)
     chk = check(snap["vals"], BASE, None)
     result = {
-        "site": site, "url": R.SITES[site], "case": {"party": BASE.party, "time": BASE.hhmm, "day": "ngày mai", "name": BASE.name},
+        "site": site, "url": R.SITES[site], "started_at": rec.started_at,
+        "case": {"party": BASE.party, "time": BASE.hhmm, "day": "ngày mai", "name": BASE.name},
         "ms": res["ms"], "err": res["err"], "steps": res["steps"], "form": snap["vals"], "check": chk,
         "outcome": ("blocked" if res["err"] and "UNAVAILABLE" in res["err"] else "failed") if res["err"] else ("success" if all(chk.values()) else "wrong_data"),
         "guard_blocked": blocked, "guard_allowed_posts": rec.versions["guard_allowed_posts"],
@@ -65,21 +70,48 @@ async def shoot(site: str) -> dict:
     return result
 
 
+def place(site: str, results: list[tuple[Path, dict]]) -> None:
+    """Ảnh chính = lần đúng đầu tiên (không có thì lần đầu); ảnh lỗi = lần không đúng đầu tiên."""
+    base = OUT / site
+    main = next((p for p, r in results if r.get("outcome") == "success"), results[0][0])
+    bad = next((p for p, r in results if r.get("outcome") != "success"), None)
+    for f in list(base.glob("*.png")) + [base / "steps.json"]:
+        f.unlink(missing_ok=True)
+    for f in main.iterdir():
+        shutil.copy2(f, base / f.name)
+    if bad:
+        shutil.rmtree(base / "run_loi", ignore_errors=True)
+        shutil.copytree(bad, base / "run_loi")
+    for p, _ in results:
+        shutil.rmtree(p, ignore_errors=True)
+
+
 def main() -> int:
     proof = Path("results/llm/real/guard_proof_direct.json")
     digest = hashlib.sha256(Path("bench/llm/guard.py").read_bytes() + Path("bench/llm/direct_worker.py").read_bytes()).hexdigest()
     if not proof.exists() or json.loads(proof.read_text()).get("sha256") != digest:
         print("TỪ CHỐI: đường chạy trực tiếp chưa được kiểm chứng; chạy python -m bench.llm.guard_check_direct")
         return 4
-    sites = sys.argv[1:] or list(R.SITES)
-    for s in sites:
-        try:
-            r = asyncio.run(shoot(s))
-        except Exception as e:
-            print(s, "LỖI", type(e).__name__, str(e)[:200], flush=True)
-            continue
-        print(s, r.get("outcome"), f"{len(r.get('steps', []))} ảnh", (r.get("err") or "")[:120], "chặn:", len(r.get("guard_blocked", [])),
-              "gửi dữ liệu khách bị chặn:", r.get("guard_submit_attempts"), flush=True)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("sites", nargs="*")
+    ap.add_argument("--reps", type=int, default=1)
+    a = ap.parse_args()
+    for s in a.sites or list(R.SITES):
+        results = []
+        for i in range(1, a.reps + 1):
+            tmp = OUT / s / f"_r{i}"
+            try:
+                r = asyncio.run(shoot(s, tmp))
+            except Exception as e:
+                print(s, i, "LỖI", type(e).__name__, str(e)[:200], flush=True)
+                continue
+            results.append((tmp, r))
+            with LOG.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps({k: r.get(k) for k in ("site", "started_at", "outcome", "err", "check", "ms", "guard_submit_attempts")}, ensure_ascii=False) + "\n")
+            print(s, i, r.get("outcome"), f"{len(r.get('steps', []))} ảnh", (r.get("err") or "")[:120], "chặn:", len(r.get("guard_blocked", [])),
+                  "gửi dữ liệu khách bị chặn:", r.get("guard_submit_attempts"), flush=True)
+        if results:
+            place(s, results)
     return 0
 
 

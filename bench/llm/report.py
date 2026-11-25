@@ -4,7 +4,7 @@ import json
 import math
 import statistics
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
@@ -287,20 +287,19 @@ def build() -> str:
     L.append("")
     L.append("Sinh bởi `uv run python -m bench.llm.shots`; ảnh và từng bước ở `results/llm/real/shots/`, xem kèm ảnh trong `results/llm/real/llm_web.xlsx`.")
     L.append("")
-    L.append("| Web | Lần chạy | Kết quả | Trường sai | Ảnh | Request bị lớp chặn chặn | Dữ liệu khách định rời trang |")
+    L.append("| Web | Số lần | Đúng | Từ chối (blocked) | Sai (wrong_data) | Hỏng (failed) | Dữ liệu khách định rời trang |")
     L.append("|---|---|---|---|---|---|---|")
-    shots = Path("results/llm/real/shots")
+    lf = Path("results/llm/real/shots/runs.jsonl")
+    runs = [json.loads(x) for x in lf.read_text(encoding="utf-8").splitlines() if x.strip()] if lf.exists() else []
     for site in combo_report.SITES:
-        for sub, label in (("run_loi", "lần 1"), ("", "lần cuối")):
-            f = shots / site / sub / "steps.json"
-            if not f.exists():
-                continue
-            d = json.loads(f.read_text(encoding="utf-8"))
-            bad_f = ", ".join(k for k, x in d["check"].items() if not x) or "—"
-            L.append(f"| {site[5:]} | {label} | {d['outcome']} | {bad_f} | {len(d['steps'])} | {len(d['guard_blocked'])} | {d['guard_submit_attempts']} |")
+        rs = [r for r in runs if r["site"] == site]
+        if rs:
+            c = Counter(r["outcome"] for r in rs)
+            L.append(f"| {site[5:]} | {len(rs)} | {c['success']} | {c['blocked']} | {c['wrong_data']} | {c['failed']} | {sum(r['guard_submit_attempts'] for r in rs)} |")
     L.append("")
     L.append("Quan sát từ ảnh (không phải số đo):")
-    L.append("- **Lẩu Phan**: script kết thúc khi ô Giờ còn đang tải; danh sách giờ tải xong thì ghi đè lựa chọn về 'Chọn'. Lỗi chập chờn (lần 1 sai, lần 2 đúng). Cần sửa script: chờ ô Giờ hết tải rồi mới chọn, và kiểm tra lại giá trị ở cuối.")
+    L.append("- **Lẩu Phan**: một lần chạy lại trước loạt trên (không nằm trong bảng) bị sai giờ: script kết thúc khi ô Giờ còn đang tải, tải xong thì giờ bị đặt về 'Chọn'. Lỗi chập chờn. Cần sửa script: chờ ô Giờ tải xong rồi mới chọn, và kiểm tra lại giá trị ở cuối.")
+    L.append("- **King BBQ**: script chọn nhà hàng khi danh sách nhà hàng chưa tải xong, nên có lần tự từ chối ('không có chi nhánh khớp chính xác') và chuyển sang LLM. Không điền sai.")
     L.append("- **Lẩu Wang**: ô `<select>` gốc có giờ và cơ sở đúng, nhưng widget hiển thị vẫn ghi 'Giờ' / 'Chọn cơ sở'. Chưa biết web có nhận giá trị khi bấm đặt hay không.")
     L.append("")
 

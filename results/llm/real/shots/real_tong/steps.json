@@ -1,87 +1,87 @@
 {
  "site": "real_tong",
  "url": "https://tong.com.vn/dat-ban",
+ "started_at": "2026-11-25T03:40:33.134944+00:00",
  "case": {
   "party": 3,
   "time": "18:00",
   "day": "ngày mai",
   "name": "Khach Thu Nghiem"
  },
- "ms": 10604.459015000004,
+ "ms": 9993.709493999973,
  "err": null,
  "steps": [
   {
    "n": 1,
-   "t": 3.29,
-   "action": "goto_url(https://tong.com.vn/dat-ban)",
+   "t": 7.74,
+   "action": "Trang tải xong, script chưa điền gì (giá trị mặc định)",
    "changed": [
-    "URL → https://tong.com.vn/dat-ban"
+    "URL: https://tong.com.vn/dat-ban",
+    "mặc định: selectCoso = Tòng Livehouse",
+    "mặc định: selectSoNguoi = 1",
+    "mặc định: selectDay = Hôm nay",
+    "mặc định: selectHour = Chọn"
    ],
    "file": "01.png"
   },
   {
    "n": 2,
-   "t": 7.87,
-   "action": "wait_for_load()",
+   "t": 8.06,
+   "action": "js(return (() => { const s = document.getElementById(\"selectSoNguoi\"); s.selectedIndex = 2; s.dispatchEvent(new Event('inp…)",
    "changed": [
-    "selectCoso = Tòng Livehouse",
-    "selectSoNguoi = 1",
-    "selectDay = Hôm nay",
-    "selectHour = Chọn"
+    "selectSoNguoi = 3"
    ],
    "file": "02.png"
   },
   {
    "n": 3,
-   "t": 8.16,
-   "action": "js(return (() => { const s = document.getElementById(\"selectSoNguoi\"); s.selectedIndex = 2; s.dispatchEvent(new Event('inp…)",
+   "t": 8.32,
+   "action": "js(return (() => { const s = document.getElementById(\"selectDay\"); s.selectedIndex = 1; s.dispatchEvent(new Event('input',…)",
    "changed": [
-    "selectSoNguoi = 3"
+    "selectDay = Ngày mai"
    ],
    "file": "03.png"
   },
   {
    "n": 4,
-   "t": 8.41,
-   "action": "js(return (() => { const s = document.getElementById(\"selectDay\"); s.selectedIndex = 1; s.dispatchEvent(new Event('input',…)",
+   "t": 9.41,
+   "action": "js(return (() => { const s = document.getElementById(\"selectHour\"); s.selectedIndex = 5; s.dispatchEvent(new Event('input'…)",
    "changed": [
-    "selectDay = Ngày mai"
+    "selectHour = 18:00"
    ],
    "file": "04.png"
   },
   {
    "n": 5,
-   "t": 9.65,
-   "action": "js(return (() => { const s = document.getElementById(\"selectHour\"); s.selectedIndex = 5; s.dispatchEvent(new Event('input'…)",
+   "t": 9.69,
+   "action": "type_text(Khach Thu Nghiem)",
    "changed": [
-    "selectHour = 18:00"
+    "nameOrder = Khach Thu Nghiem"
    ],
    "file": "05.png"
   },
   {
    "n": 6,
-   "t": 9.91,
-   "action": "type_text(Khach Thu Nghiem)",
+   "t": 9.98,
+   "action": "type_text(0000000000)",
    "changed": [
-    "nameOrder = Khach Thu Nghiem"
+    "sdtOrder = 0000000000"
    ],
    "file": "06.png"
   },
   {
    "n": 7,
-   "t": 10.19,
-   "action": "type_text(0000000000)",
+   "t": 13.24,
+   "action": "Kết thúc script, chờ 3 giây cho trang ổn định: trạng thái được chấm. Dừng trước nút đặt",
    "changed": [
-    "sdtOrder = 0000000000"
+    "cuối: selectCoso = Tòng Livehouse",
+    "cuối: selectSoNguoi = 3",
+    "cuối: selectDay = Ngày mai",
+    "cuối: selectHour = 18:00",
+    "cuối: nameOrder = Khach Thu Nghiem",
+    "cuối: sdtOrder = 0000000000"
    ],
    "file": "07.png"
-  },
-  {
-   "n": 8,
-   "t": 10.45,
-   "action": "kết thúc script: form đã điền, dừng trước nút đặt",
-   "changed": [],
-   "file": "08.png"
   }
  ],
  "form": [

@@ -27,15 +27,19 @@ STATE_JS = """() => ({
                     e.tagName === 'SELECT' ? (e.options[e.selectedIndex] || {}).text || e.value : e.value]))
 })"""
 MAX_SHOTS = 40
-FOCUS_JS = """(keys) => {
-  document.querySelectorAll('[data-bench-hl]').forEach(e => { e.style.outline = e.dataset.benchHl; delete e.dataset.benchHl; });
+SETTLE_MS = 3000
+FOCUS_JS = """([keys, outline]) => {
+  document.querySelectorAll('[data-bench-hl]').forEach(e => { e.style.removeProperty('outline'); e.style.removeProperty('outline-offset'); delete e.dataset.benchHl; });
   let first = null;
   for (const k of keys) {
     const e = document.querySelector(`[name="${CSS.escape(k)}"]`) || document.getElementById(k);
     if (!e) continue;
     const t = (e.offsetParent || e.type === 'hidden') ? e : (e.closest('.select2-container, .nice-select') || e.parentElement || e);
-    t.dataset.benchHl = t.style.outline || '';
-    t.style.outline = '3px solid red';
+    if (outline) {
+      t.dataset.benchHl = '1';
+      t.style.setProperty('outline', '3px solid red', 'important');
+      t.style.setProperty('outline-offset', '1px', 'important');
+    }
     first = first || t;
   }
   if (first) first.scrollIntoView({block: 'center'});
@@ -58,25 +62,32 @@ def wrap(env: dict, page, out_dir: Path, steps: list) -> None:
         except Exception:
             return None
 
-    def snap(label: str, force: bool = False) -> None:
+    def snap(label: str, mode: str = "step") -> None:
+        """mode: "base" = trang vừa tải xong (giá trị mặc định, không viền);
+        "step" = sau một thao tác, chỉ chụp khi có thay đổi, viền ô vừa đổi;
+        "final" = trạng thái cuối, viền mọi ô đã có giá trị."""
         if len(steps) >= MAX_SHOTS:
             return
         st = state()
         prev = last["state"]
-        if st is None or (not force and st == prev):
+        if st is None or (mode == "step" and st == prev):
             return
-        changed = []
-        if prev is None or st["url"] != prev["url"]:
-            changed.append(f"URL → {st['url']}")
-        old = (prev or {}).get("vals", {})
-        keys = [k for k, v in st["vals"].items() if old.get(k) != v and v not in ("", None)]
-        changed += [f"{k} = {st['vals'][k]}" for k in keys]
         last["state"] = st
-        focus = keys if prev is not None else []
-        if force and not focus:
-            focus = [k for k, v in st["vals"].items() if v not in ("", None)]
+        filled = [k for k, v in st["vals"].items() if v not in ("", None)]
+        if mode == "base":
+            changed = [f"URL: {st['url']}"] + [f"mặc định: {k} = {st['vals'][k]}" for k in filled]
+            focus = []
+        elif mode == "final":
+            changed = [f"cuối: {k} = {st['vals'][k]}" for k in filled]
+            focus = filled
+        else:
+            old = (prev or {}).get("vals", {})
+            focus = [k for k in filled if old.get(k) != st["vals"][k]]
+            changed = [f"{k} = {st['vals'][k]}" for k in focus]
+            if prev is not None and st["url"] != prev["url"]:
+                changed.insert(0, f"URL → {st['url']}")
         try:
-            page.evaluate(FOCUS_JS, focus)
+            page.evaluate(FOCUS_JS, [focus or (filled if mode == "base" else []), mode != "base"])
             page.wait_for_timeout(150)
         except Exception:
             pass
@@ -89,11 +100,31 @@ def wrap(env: dict, page, out_dir: Path, steps: list) -> None:
             changed.append(f"(không chụp được: {type(e).__name__})")
         steps.append({"n": n, "t": round(time.perf_counter() - T0, 2), "action": label, "changed": changed, "file": f.name if f else None})
 
+    def settle_base():
+        if not last["nav"]:
+            return
+        last["nav"] = False
+        try:
+            page.wait_for_load_state("load", timeout=15000)
+        except Exception:
+            pass
+        snap("Trang tải xong, script chưa điền gì (giá trị mặc định)", "base")
+
+    last["nav"] = False
     for name in ("goto_url", "new_tab", "js", "click_at_xy", "type_text", "press_key", "scroll", "wait_for_load"):
         fn = env[name]
 
         def make(fn=fn, name=name):
             def w(*a, **k):
+                if name in ("goto_url", "new_tab"):
+                    r = fn(*a, **k)
+                    last["nav"] = True
+                    return r
+                if name == "wait_for_load":
+                    r = fn(*a, **k)
+                    settle_base()
+                    return r
+                settle_base()
                 r = fn(*a, **k)
                 if name == "js" and isinstance(a[0], str) and a[0].strip().startswith(("document.readyState", "(()=>!!document")):
                     return r
@@ -103,6 +134,7 @@ def wrap(env: dict, page, out_dir: Path, steps: list) -> None:
             return w
 
         env[name] = make()
+    env["__settle__"] = settle_base
     env["__snap__"] = snap
 
 
@@ -134,12 +166,14 @@ def main() -> None:
                 tb = traceback.extract_tb(e.__traceback__)
                 line_no = next((f.lineno for f in reversed(tb) if f.filename == "<replay>"), None)
                 err = f"{type(e).__name__}: {e} (line {line_no})"[:1200]
+            ms = (time.perf_counter() - T0) * 1000
             try:
-                env["__snap__"]("kết thúc script: form đã điền, dừng trước nút đặt", force=True)
+                env["__settle__"]()
+                page.wait_for_timeout(SETTLE_MS)
+                env["__snap__"](f"Kết thúc script, chờ {SETTLE_MS // 1000} giây cho trang ổn định: trạng thái được chấm. Dừng trước nút đặt", "final")
                 page.screenshot(path=str(out_dir / "final_full.png"), full_page=True, timeout=15000)
             except Exception:
                 pass
-            ms = (time.perf_counter() - T0) * 1000
             print(json.dumps({"ms": ms, "err": err, "out": out.getvalue()[-600:], "steps": steps}, ensure_ascii=False), flush=True)
             if sys.stdin.readline().strip() != "close":
                 return
