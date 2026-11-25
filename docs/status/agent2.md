@@ -1,12 +1,18 @@
 # Trạng thái — Agent 2 (LLM & cache)
 
-Cập nhật 2026-11-24. Nhánh `agent2-llm`, chưa merge vào `main`.
+Cập nhật 2026-11-25.
 
-- **Đang làm:** bài đo gộp trên 5 web nhà hàng thật đã đủ 5 vòng, kết quả ở `results/llm_snapshot_20261124/SUMMARY.md`. Chờ người dùng chốt model và chế độ cache; chưa có `reports/llm.md`.
-- **Mốc đã xong:** M1, M2. M3 đang chạy và đã đổi hướng theo yêu cầu người dùng, xem `docs/CHANGES.md`.
-- **Mock site:** Haiku 5.5 không cache 50/50 lượt đúng; cache gợi ý 20/20 (4/10 task) rồi dừng theo yêu cầu. Sonnet và Grok chưa đo.
-- **Chạy lại:**
-  - `python -m bench.llm.guard_check` và `python -m bench.llm.guard_check_direct`: kiểm chứng lớp chặn, bắt buộc trước khi chạy web thật.
-  - `python -m bench.llm.combo --phase 1,2 --reps 5 --busy-ok`: đo, chạy tiếp được khi bị ngắt. Cần dữ liệu học từ `python -m bench.llm.real --learn-only`.
-  - `python -m bench.llm.combo_report`: tổng hợp số.
-- **Agent 1 cần biết:** đừng dùng các ghi chú cũ về telemetry "+70 giây"; chưa được chứng minh. Đề xuất cờ Chrome ở `docs/CHANGES.md`.
+- **Đang làm:** không có. M3 đã xong.
+- **Mốc đã xong:**
+  - M1: `bench/llms/get_llm()` (Haiku, Sonnet, Gemini, Grok), giá LLM trong `bench/core/prices.toml`.
+  - M2: harness mock site (`bench.llm.run`), lớp chặn gửi đơn, harness web thật (`bench.llm.real`, `bench.llm.combo`).
+  - M3: đo trên 5 web nhà hàng thật (5 vòng), mock site làm phụ lục. Báo cáo `reports/llm.md`, sinh lại bằng `uv run python -m bench.llm.report`.
+- **Kết quả, cho Agent 1 làm M4:**
+  - **Model thắng: `claude-haiku-5-5`.** Đây là mặc định của `get_llm()`. Gemini flash-lite bị loại vì có 1 lượt `wrong_data`.
+  - **Chế độ cache thắng: `actions`**, nghĩa mới: cache quy trình, tức script chạy thẳng không gọi LLM, và gọi Haiku chạy chay khi script từ chối. Trên web thật: 25/25 lượt đúng, p50 8,5 s, so với Haiku chạy chay p50 45,1 s và $0,0041/lượt. Hòa vốn sau 3–10 lượt mỗi web.
+  - Rủi ro: 2 lượt Haiku ở Lẩu Wang chưa chấm được ô giờ (xem mục 8 của báo cáo).
+- **Bị chặn bởi:** không có. Đã tiêu: Claude $1,01 / $1,80, Gemini $0,69 / $1,00. Sonnet chưa đo vì ước tính khoảng $1 cho 10 lượt, vượt phần còn lại.
+- **Agent 1 cần biết:**
+  - Hợp đồng đã sửa (người dùng duyệt 25/11): trục LLM đo trên web thật, Gemini thay Grok, 5 vòng mỗi ô, `actions` = cache quy trình. Xem `docs/CHANGES.md`.
+  - Đã duyệt thêm 3 cờ Chrome chống che cửa sổ cho `chrome_local`. Việc này của Agent 1, vì file nằm trong `bench/providers/`.
+  - M4 trên mock site: script cache hiện chỉ có cho 5 web thật (`results/llm/real/scripts/`); `bench.llm.real` chỉ biết 5 web đó. Trên mock site chưa có công cụ sinh script, nên kiểm tra chéo trên mock site chỉ chạy được `none`, hoặc `actions` bản cũ (gợi ý code, `bench.llm.run --modes actions`).

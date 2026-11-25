@@ -25,7 +25,7 @@ def rows(kind, model=None, site=None):
     return [r for r in ROWS if r["versions"]["kind"] == kind and (model is None or r["model"].startswith(model)) and (site is None or r["site"] == site)]
 
 
-def main() -> int:
+def lines() -> list[str]:
     L = []
     groups = [("Claude Haiku chay", "cold", "claude"), ("Gemini flash-lite chay", "cold", "gemini"), ("Replay qua browser-use", "replay", None), ("Script chạy thẳng, Chrome mở sẵn", "direct", None)]
     L.append("## Thời gian (s), chỉ lượt thành công\n\n| Cách | n thành công/tổng | p50 | p95 | $/lượt TB | $/thành công | bước p50 | cpu TB |\n|---|---|---|---|---|---|---|---|")
@@ -92,7 +92,11 @@ def main() -> int:
     for r in ROWS:
         tot[r["model"]] += r["llm_cost_usd"]
     L.append(f"Chi phí combo: { {k: round(v, 4) for k, v in tot.items()} }")
-    print("\n".join(L))
+    return L
+
+
+def main() -> int:
+    print("\n".join(lines()))
     return 0
 
 

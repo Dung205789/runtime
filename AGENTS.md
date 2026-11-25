@@ -52,7 +52,7 @@ Người kia đọc file này để biết khi nào được dùng phần của 
 ## Luật chung
 
 - **Không bịa số.** Chỉ dùng số đo thật. Thiếu khóa API thì ghi `skipped`.
-- **Không chạy lặp trên web đặt bàn thật.** Chỉ dùng mock site trong `mock_sites/`.
+- **Không bao giờ gửi đơn lên web đặt bàn thật.** Trục runtime chỉ dùng mock site trong `mock_sites/`. Trục LLM được đo trên web thật nhưng phải dừng trước nút đặt và chạy sau lớp chặn `bench/llm/guard.py` (hợp đồng mục 5).
 - Tra tài liệu thư viện và dịch vụ **bản hiện hành** trước khi viết code (browser-use, Steel, xAI…). Không viết theo trí nhớ.
 - Không sửa file của người kia. Bảng phân quyền ở mục 2 của hợp đồng.
 - Muốn đổi hợp đồng thì ghi đề xuất vào `docs/CHANGES.md`, ghi tên mình, rồi **dừng lại hỏi người dùng**.

@@ -43,7 +43,7 @@ Mọi thứ trong file này **đã chốt**. Không agent nào tự sửa. Cần
 
 **Runtime (Agent 1):** `chrome_local`, `steel_selfhost` (Docker), `steel_cloud`, `browser_use_cloud`, `kernel` (tùy chọn, làm nếu còn thời gian).
 
-**LLM (Agent 2):** chạy trong browser-use. Ứng viên: `claude-sonnet-5-5`, `claude-haiku-5-5`, `grok-4.6`. Nếu `grok-4.6` chưa mở quyền truy cập thì dùng model Grok GA mới nhất và ghi rõ tên. Tùy chọn thêm: Claude gọi trực tiếp `browser_toolset_20260801`, dùng làm cột tham khảo.
+**LLM (Agent 2):** chạy trong browser-use. Ứng viên: `claude-haiku-5-5`, `claude-sonnet-5-5`, và Gemini (`gemini-3.5-flash-lite`, `gemini-3.8-flash`) thay cho Grok (đã duyệt 25/11, xem `docs/CHANGES.md`). Grok chỉ đo khi có credit xAI. Tùy chọn thêm: Claude gọi trực tiếp `browser_toolset_20260801`, dùng làm cột tham khảo.
 
 **Biến cố định khi đo** (để tách biến):
 
@@ -52,7 +52,7 @@ Mọi thứ trong file này **đã chốt**. Không agent nào tự sửa. Cần
 
 ## 5. Bộ task và mock site
 
-Không chạy lặp trên web nhà hàng thật, vì sẽ tạo đơn rác. Đo trên **5 mock site** chạy local. Mức độ khó của chúng đại diện cho các loại site mà các module sau sẽ gặp:
+**Trục runtime (Agent 1)** đo trên **5 mock site** chạy local. **Trục LLM (Agent 2)** đo trên **5 web nhà hàng thật**, với điều kiện: dừng trước nút đặt, mọi lượt chạy sau lớp chặn gửi đơn (`bench/llm/guard.py`) đã có bằng chứng kiểm chứng, dùng dữ liệu khách giả (đã duyệt 25/11). Không bao giờ gửi đơn thật. Mock site: Mức độ khó của chúng đại diện cho các loại site mà các module sau sẽ gặp:
 
 | Site | Cổng | Độ khó |
 |---|---|---|
@@ -90,17 +90,17 @@ Ngoài mock site, Agent 1 đo anti-bot **chỉ đọc, không submit** trên 3 t
 |---|---|
 | `none` | Profile trắng, agent không có gì lưu sẵn. Đây là "chưa cache" |
 | `session` | Dùng lại `storage_state` (cookie, localStorage) từ một lượt thành công trước đó |
-| `actions` | Lấy code Python của một lượt `none` đã thành công (cùng site, khác task) đưa vào làm gợi ý. LLM vẫn chạy nhưng cần ít bước hơn. Không dùng cơ chế chạy lại lịch sử vì browser-use 1.0 đã bỏ nó; chi tiết ở `docs/CHANGES.md` |
+| `actions` | **Cache quy trình**: từ một lượt `none` thành công, sinh script có tham số (ngày, giờ, số người, tên, SĐT) rồi chạy lại **không gọi LLM**. Script tự từ chối khi không khớp được dữ liệu; lúc đó mới gọi LLM chạy chay. (Trên mock site, bản cũ của `actions` là đưa code vào prompt làm gợi ý; browser-use 1.0 đã bỏ chạy lại lịch sử.) Chi tiết ở `docs/CHANGES.md` |
 
 **Prompt cache của API** luôn **bật** ở mọi cấu hình, vì thực tế sẽ dùng như vậy. Ghi riêng các cột `tokens_cache_read` / `tokens_cache_write`. Đây không phải `cache_mode`.
 
 ## 8. Quy trình đo
 
-- Mỗi ô (ứng viên × task × chế độ) chạy **11 lần**. Lần đầu là warm-up (`warmup = true`) và bị loại khỏi thống kê.
+- Trục runtime: mỗi ô (ứng viên × task × chế độ) chạy **11 lần**. Lần đầu là warm-up (`warmup = true`) và bị loại khỏi thống kê. Trục LLM: **5 vòng mỗi web** do ngân sách (đã duyệt 25/11); p95 khi đó gần bằng giá trị lớn nhất.
 - Báo **p50 và p95**, không báo trung bình đơn thuần.
 - Chi phí tính trên **lượt thành công**: `$/success = tổng chi phí mọi lượt ÷ số lượt success`.
 - Giới hạn mỗi lượt: tối đa 40 bước, tối đa 300 giây (không tính thời gian chờ người). Vượt giới hạn thì `timeout`.
-- Ngân sách LLM: hiện chỉ có **$1,80 cho toàn bộ trục LLM**, đặt bằng biến `BENCH_LLM_BUDGET_USD`. Ma trận đã được rút gọn, xem `docs/CHANGES.md`. Chạm trần thì dừng, và ghi lại đã chạy được bao nhiêu ô.
+- Ngân sách LLM: hiện chỉ có **$1,80 cho toàn bộ trục LLM**, đặt bằng biến `BENCH_LLM_BUDGET_USD`. Ma trận đã được rút gọn (đã duyệt 25/11), xem `docs/CHANGES.md`. Chạm trần thì dừng, và ghi lại đã chạy được bao nhiêu ô.
 - Giá lấy từ trang chính thức, ghi vào `bench/core/prices.toml` kèm ngày tra và URL nguồn. Agent 1 ghi giá runtime, Agent 2 ghi giá LLM.
 
 ## 9. Log
