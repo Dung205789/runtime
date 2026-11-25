@@ -1,4 +1,4 @@
-"""Sinh trang HTML kết quả trục LLM & cache (phần Agent 2), kèm ảnh từng bước.
+"""Sinh trang HTML kết quả trục LLM & cache (phần Agent 2, chỉ Claude), kèm ảnh từng bước.
 
 Mọi số đọc từ results/llm/ (không nhập tay). Ảnh lấy từ results/llm/real/shots/, nén JPEG.
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 import html
 import json
 import math
+import re
 import statistics as st
 import sys
 from collections import Counter
@@ -18,19 +19,26 @@ from pathlib import Path
 from PIL import Image
 
 from bench.llm.budget import family, records, spent_usd
-from bench.llm.report import kind, real_rows, real_summary, wrong_fields
+from bench.llm.report import kind, real_rows, wrong_fields
 
 OUT = Path("results/llm/real/html")
 SHOTS = Path("results/llm/real/shots")
 SCRIPTS = Path("results/llm/real/scripts")
 SITES = {"real_lauphan": "Lẩu Phan", "real_tong": "Tòng", "real_chaoxian": "Chao Xian", "real_lauwang": "Lẩu Wang", "real_kingbbq": "King BBQ"}
-HAIKU, GEMINI = "claude-haiku-5-5", "gemini-3.5-flash-lite"
+HAIKU = "claude-haiku-5-5"
 WAYS = [
-    ("haiku", "Haiku chạy chay", "none", "cold", HAIKU),
-    ("gemini", "Gemini flash-lite chạy chay", "none", "cold", GEMINI),
-    ("replay", "Script cache qua browser-use", "actions", "replay", None),
-    ("direct", "Script cache chạy thẳng", "actions", "direct", None),
+    ("haiku", "Haiku tự làm từ đầu", "none", "cold", HAIKU),
+    ("replay", "Script qua browser-use", "actions", "replay", None),
+    ("direct", "Script chạy thẳng", "actions", "direct", None),
 ]
+FIELD = {
+    "selectCoso": "Cơ sở", "address": "Cơ sở", "inputRestaurant": "Nhà hàng",
+    "selectSoNguoi": "Số người", "adult": "Số người lớn", "inputNumber": "Số người", "child": "Trẻ em",
+    "selectDay": "Ngày", "date": "Ngày", "inputDate": "Ngày",
+    "selectHour": "Giờ", "time": "Giờ", "inputHour": "Giờ", "inputMinute": "Phút",
+    "nameOrder": "Tên khách", "your-name": "Tên khách", "inputName": "Tên khách",
+    "sdtOrder": "Số điện thoại", "phone": "Số điện thoại", "inputPhone": "Số điện thoại", "inputEmail": "Email",
+}
 E = html.escape
 
 
@@ -103,6 +111,32 @@ def bars(rows: list[tuple[str, float | None, float | None]]) -> str:
     return "".join(out)
 
 
+def plain(entry: str) -> tuple[str, str]:
+    """'selectHour = 18:00' / 'mặc định: time = Giờ' / 'cuối: ...' → ('Giờ', '18:00')."""
+    e = re.sub(r"^(mặc định|cuối): ", "", entry)
+    if e.startswith("URL"):
+        return "Địa chỉ", e.split(":", 1)[1].strip() if ":" in e else e
+    k, _, v = e.partition(" = ")
+    return FIELD.get(k.strip(), k.strip()), v.strip()
+
+
+def step_text(s: dict) -> tuple[str, list[tuple[str, str]]]:
+    a = s["action"]
+    pairs = [plain(c) for c in s["changed"] if not c.startswith("(")]
+    if a.startswith("Trang tải xong"):
+        return "Mở trang đặt bàn. Form còn giá trị mặc định, chưa điền gì.", [p for p in pairs if p[0] != "Địa chỉ"]
+    if a.startswith("Kết thúc"):
+        return "Kết thúc: form đã điền đủ. Dừng trước nút Đặt bàn, không gửi.", pairs
+    if a.startswith(("type_text", "press_key")):
+        verb = "Gõ"
+    elif a.startswith("click"):
+        verb = "Bấm chọn"
+    else:
+        verb = "Chọn / điền"
+    what = ", ".join(f"{k.lower()} {v}" for k, v in pairs[:2]) or "trang"
+    return f"{verb} {what}.", []
+
+
 def steps_html(site: str, d: dict, prefix: str) -> str:
     folder = SHOTS / site / prefix if prefix else SHOTS / site
     items = []
@@ -110,158 +144,186 @@ def steps_html(site: str, d: dict, prefix: str) -> str:
         if not s.get("file") or not (folder / s["file"]).exists():
             continue
         src = jpg(folder / s["file"], f"{site}_{prefix or 'main'}_{s['n']:02d}.jpg")
-        ch = "".join(f"<li>{E(c)}</li>" for c in s["changed"][:8])
+        text, pairs = step_text(s)
+        kv = "".join(f"<dt>{E(k)}</dt><dd>{E(v)}</dd>" for k, v in pairs[:9])
         items.append(
             f'<figure class="step"><a href="{src}" target="_blank" rel="noopener"><img src="{src}" loading="lazy" '
-            f'alt="{E(SITES[site])} bước {s["n"]}"></a><figcaption><span class="step-n num">{s["n"]:02d}</span>'
-            f'<span class="step-t num">{s["t"]:.1f} s</span><p class="step-a">{E(s["action"][:140])}</p><ul>{ch}</ul></figcaption></figure>'
+            f'alt="{E(SITES[site])}, bước {s["n"]}: {E(text)}"></a><figcaption>'
+            f'<div class="step-top"><span class="step-n num">Bước {s["n"]}</span><span class="step-t num">giây thứ {s["t"]:.1f}</span></div>'
+            f'<p class="step-a">{E(text)}</p>{f"<dl class=kv>{kv}</dl>" if kv else ""}'
+            f'<details class="code"><summary>Lệnh script</summary><code>{E(s["action"][:300])}</code></details></figcaption></figure>'
         )
     return f'<div class="steps">{"".join(items)}</div>'
+
+
+def stat(rows):
+    sc = [r for r in rows if not r["versions"].get("unscored")]
+    ok = [r for r in sc if r["outcome"] == "success"]
+    t = [r["total_ms"] / 1000 for r in ok]
+    cost = sum(r["llm_cost_usd"] for r in rows)
+    return {"n": len(rows), "scored": len(sc), "ok": len(ok), "unscored": len(rows) - len(sc),
+            "wrong": sum(r["outcome"] == "wrong_data" for r in sc), "p50": pct(t, 0.5), "p95": pct(t, 0.95),
+            "cpr": cost / len(rows) if rows else None, "cps": cost / len(ok) if ok else None,
+            "calls": pct([r["versions"].get("llm_calls") or 0 for r in ok], 0.5),
+            "llm_s": pct([(r["versions"].get("llm_ms") or 0) / 1000 for r in ok], 0.5)}
 
 
 def build() -> str:
     R = real_rows()
     allrecs = records()
-    S = {m: real_summary(kind(R, "cold", m)) for m in (HAIKU, GEMINI)}
-    W = {}
-    for key, label, mode, k, m in WAYS:
-        rows = kind(R, k, m)
-        sc = [r for r in rows if not r["versions"].get("unscored")]
-        ok = [r for r in sc if r["outcome"] == "success"]
-        t = [r["total_ms"] / 1000 for r in ok]
-        cost = sum(r["llm_cost_usd"] for r in rows)
-        W[key] = {"label": label, "mode": mode, "n": len(rows), "scored": len(sc), "ok": len(ok), "unscored": len(rows) - len(sc),
-                  "wrong": sum(r["outcome"] == "wrong_data" for r in sc), "p50": pct(t, 0.5), "p95": pct(t, 0.95),
-                  "cpr": cost / len(rows) if rows else None, "cps": cost / len(ok) if ok else None}
-    spend = {f: spent_usd([r for r in allrecs if family(r.get("model") or "-") == f]) for f in ("claude", "gemini")}
+    W = {key: stat(kind(R, k, m)) | {"label": label, "mode": mode} for key, label, mode, k, m in WAYS}
+    H = W["haiku"]
+    spend = spent_usd([r for r in allrecs if family(r.get("model") or "-") == "claude"])
     chk = kind(R, "check")
     runs = runs_log()
     rc = recheck_log()
     bev = {s: breakeven(R, s) for s in SITES}
     ns = [b["n"] for b in bev.values() if b]
     fo = kind(R, "failover")
+    ex_site = min((s for s in SITES if bev[s]), key=lambda s: bev[s]["n"])
+    ex = bev[ex_site]
+    speed = H["p50"] / W["direct"]["p50"] if W["direct"]["p50"] else None
+    lw = [r for r in kind(R, "cold", HAIKU) if r["versions"].get("unscored")]
+    otp = [r for r in allrecs if r.get("site") == "s5_otp" and r.get("cache_mode") == "none" and not r.get("warmup") and r.get("model") == HAIKU]
 
-    css = CSS
     h = []
-    h.append(f"""<title>Agent 2 · LLM &amp; cache</title>
+    h.append(f"""<title>Agent 2 · Claude đặt bàn</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<style>{css}</style>
-<nav class="topnav"><div class="wrap nav-in"><span class="brand">Agent 2 · LLM &amp; cache</span>
-<a href="#ket-luan">Kết luận</a><a href="#so-lieu">Số liệu</a><a href="#cache">Cache</a><a href="#script-v2">Script v2</a><a href="#tung-web">Từng web</a><a href="#chua-kiem-chung">Chưa kiểm chứng</a></div></nav>
+<style>{CSS}</style>
+<nav class="topnav"><div class="wrap nav-in"><span class="brand">Agent 2 · Claude đặt bàn</span>
+<a href="#ket-luan">Kết luận</a><a href="#cach-do">Cách đo</a><a href="#haiku">Haiku</a><a href="#cache">Script ghi nhớ</a><a href="#script-v2">Sửa script</a><a href="#tung-web">Từng web</a><a href="#luu-y">Lưu ý</a></div></nav>
 <main class="wrap">
 <header class="head" id="ket-luan">
 <p class="eyebrow">Module chọn công nghệ · agent đặt bàn · trục LLM &amp; cache</p>
-<h1>Haiku 5.5 làm agent, cache quy trình cho lượt lặp lại</h1>
-<p class="lede">Đo trên 5 web nhà hàng thật, mỗi web 5 vòng, dừng trước nút đặt và chạy sau lớp chặn gửi đơn. Ca chính: 3 người, ngày mai, 18:00, khách giả <span class="mono">Khach Thu Nghiem · 0000000000</span>.</p>
+<h1>Claude Haiku 5.5 tự đặt bàn được, và một script ghi nhớ giúp lần sau nhanh hơn {f1(speed)} lần</h1>
+<p class="lede">Agent dùng Claude Haiku 5.5 đọc trang đặt bàn và tự điền form trên 5 web nhà hàng thật. Lần đầu ở mỗi web, Haiku làm từ đầu. Sau một lần làm đúng, cách làm được ghi lại thành script. Những lần sau chỉ cần chạy script, không phải hỏi lại Haiku.</p>
 <div class="verdict">
- <div class="v-card"><span class="v-k">Model thắng</span><span class="v-v mono">claude-haiku-5-5</span>
-  <span class="v-d">{W['haiku']['ok']}/{W['haiku']['scored']} lượt chấm được đều đúng · p50 {f1(W['haiku']['p50'])} s · {money(W['haiku']['cps'])}/lượt đúng</span></div>
- <div class="v-card"><span class="v-k">Cache thắng</span><span class="v-v mono">actions · script chạy thẳng</span>
-  <span class="v-d">{W['direct']['ok']}/{W['direct']['scored']} đúng · p50 {f1(W['direct']['p50'])} s · không gọi LLM · hòa vốn sau {min(ns)}–{max(ns)} lượt/web</span></div>
- <div class="v-card out"><span class="v-k">Bị loại</span><span class="v-v mono">gemini-3.5-flash-lite</span>
-  <span class="v-d">{W['gemini']['wrong']} lượt điền sai giờ (cổng yêu cầu 0) · {W['gemini']['unscored']} lượt không chấm được</span></div>
+ <div class="v-card"><span class="v-k">Model chọn</span><span class="v-v">Claude Haiku 5.5</span>
+  <p class="v-d">Điền đúng <b class="num">{H['ok']}/{H['scored']}</b> lượt chấm được. Một lượt thường mất khoảng <b class="num">{f1(H['p50'])} giây</b> và tốn khoảng <b class="num">{money(H['cps'])}</b>.</p></div>
+ <div class="v-card"><span class="v-k">Cách lưu cho lần sau</span><span class="v-v">Script ghi nhớ, chạy thẳng</span>
+  <p class="v-d">Đúng <b class="num">{W['direct']['ok']}/{W['direct']['scored']}</b> lượt, thường mất <b class="num">{f1(W['direct']['p50'])} giây</b>, không tốn tiền gọi Claude. Có lời sau <b class="num">{min(ns)}–{max(ns)}</b> lần đặt ở cùng một web.</p></div>
 </div>
-<p class="note">Ngân sách đã dùng: Claude {money(spend['claude'], 2)} / $1,80 · Gemini {money(spend['gemini'], 2)} / $1,00. Sonnet và Grok chưa đo.</p>
+<p class="note">Đã dùng <b class="num">{money(spend, 2)}</b> trong ngân sách $1,80 cho Claude. Claude Sonnet 5.5 chưa được đo.</p>
 </header>""")
 
-    # ---------- số liệu ----------
-    h.append('<section id="so-lieu"><h2>Số liệu theo cách chạy</h2><p class="sub">Đợt đo 24/11, 5 web × 5 vòng. Lượt không chấm được vẫn tính tiền vào $/lượt đúng.</p>')
-    h.append(bars([(W[k]["label"], W[k]["p50"], W[k]["p95"]) for k, *_ in WAYS]))
-    h.append('<div class="tbl"><table><thead><tr><th>Cách</th><th><span class="mono">cache_mode</span></th><th class="r">Đúng / chấm được</th><th class="r">Không chấm</th><th class="r">Điền sai</th><th class="r">p50 (s)</th><th class="r">p95 (s)</th><th class="r">$/lượt</th><th class="r">$/lượt đúng</th></tr></thead><tbody>')
-    for key, *_ in WAYS:
-        w = W[key]
-        h.append(f'<tr><td>{E(w["label"])}</td><td class="mono">{w["mode"]}</td><td class="r num">{w["ok"]}/{w["scored"]}</td><td class="r num">{w["unscored"]}</td>'
-                 f'<td class="r num {"bad-t" if w["wrong"] else ""}">{w["wrong"]}</td><td class="r num">{f1(w["p50"])}</td><td class="r num">{f1(w["p95"])}</td>'
-                 f'<td class="r num">{money(w["cpr"])}</td><td class="r num">{money(w["cps"])}</td></tr>')
-    h.append("</tbody></table></div>")
-    h.append('<h3>Theo từng web (đúng / chấm được · p50 giây)</h3><div class="tbl"><table><thead><tr><th>Web</th>' +
-             "".join(f'<th class="r">{E(w[1])}</th>' for w in WAYS) + "</tr></thead><tbody>")
+    # ---------- cách đo ----------
+    h.append(f"""<section id="cach-do"><h2>Đã đo như thế nào</h2>
+<div class="explain">
+ <div><h3>Ở đâu</h3><p>5 web đặt bàn thật: Lẩu Phan, Tòng, Chao Xian, Lẩu Wang, King BBQ. Mỗi web đo 5 vòng, ngày 24/11.</p></div>
+ <div><h3>Yêu cầu</h3><p>Đặt bàn cho <b>3 người, ngày mai, 18:00</b>, tên <span class="mono">Khach Thu Nghiem</span>, số điện thoại <span class="mono">0000000000</span> (khách giả).</p></div>
+ <div><h3>An toàn</h3><p>Agent điền form rồi <b>dừng trước nút Đặt bàn</b>. Một lớp chặn trong trình duyệt chặn mọi yêu cầu chứa thông tin khách gửi ra ngoài. Không có đơn nào được gửi tới nhà hàng.</p></div>
+ <div><h3>Chấm điểm</h3><p>Sau mỗi lượt, chương trình đọc lại các ô trên form và so với yêu cầu. Không tin lời agent tự báo.</p></div>
+</div>
+<h3>Hai cách điền form</h3>
+<ol class="flow">
+ <li><span class="flow-k">Lần đầu ở một web</span><b>Haiku tự làm từ đầu.</b> Haiku xem trang, quyết định bấm và gõ gì, từng bước một. Thường gọi Claude {H['calls']} lần mỗi lượt.</li>
+ <li><span class="flow-k">Khi Haiku làm đúng</span><b>Ghi lại thành script.</b> Các thao tác được viết thành một script, trong đó ngày, giờ, số người, tên và số điện thoại là chỗ trống để điền dữ liệu mới.</li>
+ <li><span class="flow-k">Những lần sau</span><b>Chạy script, không gọi Claude.</b> Script tự kiểm tra lại form trước khi kết thúc. Gặp trường hợp không làm được (ví dụ web không có giờ khách muốn), script <b>từ chối</b> và giao lại cho Haiku.</li>
+</ol>
+<dl class="glossary">
+ <dt>Đúng</dt><dd>Mọi ô trên form khớp yêu cầu.</dd>
+ <dt>Điền sai</dt><dd>Form có ô không khớp, ví dụ sai giờ. Đây là lỗi nặng nhất, vì khách sẽ nhận một đơn sai.</dd>
+ <dt>Từ chối</dt><dd>Script biết mình không làm được nên dừng và giao lại cho Haiku. Không phải lỗi.</dd>
+ <dt>Không chấm được</dt><dd>Chương trình chấm không đọc được ô trên form, nên không biết đúng hay sai. Không tính vào tỷ lệ đúng.</dd>
+ <dt>Thời gian thường gặp (p50)</dt><dd>Một nửa số lượt xong nhanh hơn mức này.</dd>
+ <dt>Lượt chậm (p95)</dt><dd>Gần như mọi lượt xong trước mức này. Với 25 lượt, con số này gần bằng lượt chậm nhất.</dd>
+</dl></section>""")
+
+    # ---------- haiku ----------
+    h.append(f"""<section id="haiku"><h2>Haiku tự làm từ đầu</h2>
+<div class="facts">
+ <div><span class="f-v num">{H['ok']}/{H['scored']}</span><span class="f-k">lượt đúng trên số lượt chấm được ({H['unscored']} lượt không chấm được, xem Lưu ý)</span></div>
+ <div><span class="f-v num">{f1(H['p50'])} s</span><span class="f-k">thời gian thường gặp; lượt chậm {f1(H['p95'])} s</span></div>
+ <div><span class="f-v num">{money(H['cps'])}</span><span class="f-k">chi phí Claude cho một lượt đúng</span></div>
+ <div><span class="f-v num">{H['calls']}</span><span class="f-k">lần gọi Claude trong một lượt (thường gặp), mất khoảng {f1(H['llm_s'])} s chờ Claude trả lời</span></div>
+</div>
+<p class="sub">Phần thời gian còn lại là khởi động agent và chờ trang web tải. Haiku cũng qua bài kiểm tra mã OTP trên trang thử: dừng lại hỏi người đúng lúc <b class="num">{sum(bool(r.get('paused_for_otp')) for r in otp)}/{len(otp)}</b> lần, không tự đoán mã.</p>
+<div class="tbl"><table><thead><tr><th>Web</th><th class="r">Lượt đúng</th><th class="r">Thời gian thường gặp</th><th class="r">Lượt chậm nhất</th><th class="r">Chi phí / lượt</th></tr></thead><tbody>""")
     for site, name in SITES.items():
-        cells = []
-        for key, label, mode, k, m in WAYS:
-            rows = [r for r in kind(R, k, m) if r["site"] == site]
-            sc = [r for r in rows if not r["versions"].get("unscored")]
-            ok = [r for r in sc if r["outcome"] == "success"]
-            uns = len(rows) - len(sc)
-            cls = "bad-t" if len(ok) < len(sc) else ""
-            cells.append(f'<td class="r num {cls}">{len(ok)}/{len(sc)}{f" <small>+{uns} không chấm</small>" if uns else ""} · {f1(pct([r["total_ms"] / 1000 for r in ok], 0.5))}</td>')
-        h.append(f"<tr><td>{E(name)}</td>{''.join(cells)}</tr>")
-    h.append("</tbody></table></div>")
-    wd = [r for r in R if r["outcome"] == "wrong_data"]
-    h.append('<h3>Các lượt ghi <span class="mono">wrong_data</span></h3><div class="tbl"><table><thead><tr><th>Model</th><th>Web</th><th class="r">Vòng</th><th>Trường sai</th><th>Chấm?</th></tr></thead><tbody>')
-    for r in wd:
-        v = r["versions"]
-        h.append(f'<tr><td class="mono">{E(r["model"])}</td><td>{E(SITES.get(r["site"], r["site"]))}</td><td class="r num">{r["rep"]}</td><td>{E(", ".join(wrong_fields(r)))}</td>'
-                 f'<td>{"không: bộ đọc form không đọc được widget" if v.get("unscored") else "có"}</td></tr>')
-    h.append('</tbody></table></div><p class="sub">Mọi lượt sai đều sai ở trường giờ.</p></section>')
+        rows = [r for r in kind(R, "cold", HAIKU) if r["site"] == site]
+        x = stat(rows)
+        extra = f' <small>+{x["unscored"]} không chấm được</small>' if x["unscored"] else ""
+        h.append(f'<tr><td>{E(name)}</td><td class="r num">{x["ok"]}/{x["scored"]}{extra}</td><td class="r num">{f1(x["p50"])} s</td>'
+                 f'<td class="r num">{f1(max([r["total_ms"] / 1000 for r in rows if r["outcome"] == "success"] or [0]))} s</td><td class="r num">{money(x["cpr"])}</td></tr>')
+    h.append("</tbody></table></div></section>")
 
     # ---------- cache ----------
-    h.append(f"""<section id="cache"><h2>Cache quy trình và điểm hòa vốn</h2>
-<p class="sub">Từ một lượt Haiku đúng, sinh một script có tham số (ngày, giờ, số người, tên, SĐT). Lượt sau chạy script, không gọi LLM. Script không khớp được dữ liệu thì tự từ chối và chuyển sang Haiku chạy chay.</p>
+    h.append(f"""<section id="cache"><h2>Script ghi nhớ cho lần sau</h2>
+<p class="sub">So sánh cùng yêu cầu đặt bàn: Haiku tự làm từ đầu, và chạy script đã ghi nhớ. Script có thể chạy qua browser-use (cùng bộ khung với agent) hoặc chạy thẳng trên trình duyệt; chạy thẳng nhanh hơn vì bỏ được bước khởi động agent.</p>""")
+    h.append(bars([(W[k]["label"], W[k]["p50"], W[k]["p95"]) for k, *_ in WAYS]))
+    h.append('<div class="tbl"><table><thead><tr><th>Cách</th><th class="r">Lượt đúng</th><th class="r">Thời gian thường gặp</th><th class="r">Lượt chậm</th><th class="r">Chi phí / lượt</th></tr></thead><tbody>')
+    for key, *_ in WAYS:
+        w = W[key]
+        h.append(f'<tr><td>{E(w["label"])}</td><td class="r num">{w["ok"]}/{w["scored"]}</td><td class="r num">{f1(w["p50"])} s</td><td class="r num">{f1(w["p95"])} s</td><td class="r num">{money(w["cpr"])}</td></tr>')
+    h.append(f"""</tbody></table></div>
+<h3>Khi dữ liệu khách thay đổi</h3>
+<p class="sub">Script được thử với {len(chk)} yêu cầu khác nhau (số người, giờ, ngày, tên, chi nhánh khác), mỗi web 10–12 yêu cầu, gồm cả yêu cầu cố ý không hợp lệ như 03:00 sáng.</p>
 <div class="facts">
- <div><span class="f-v num">{sum(r['outcome'] == 'success' for r in chk)}/{len(chk)}</span><span class="f-k">ca đổi dữ liệu đúng (script v1)</span></div>
- <div><span class="f-v num">{sum(r['outcome'] == 'blocked' for r in chk)}</span><span class="f-k">ca script tự từ chối</span></div>
- <div><span class="f-v num">{sum(r['outcome'] == 'wrong_data' for r in chk)}</span><span class="f-k">ca điền sai mà không báo</span></div>
- <div><span class="f-v num">{sum(r['outcome'] == 'success' for r in fo)}/{len(fo)}</span><span class="f-k">lần Haiku cứu được khi cache hỏng</span></div>
+ <div><span class="f-v num">{sum(r['outcome'] == 'success' for r in chk)}</span><span class="f-k">yêu cầu điền đúng</span></div>
+ <div><span class="f-v num">{sum(r['outcome'] == 'blocked' for r in chk)}</span><span class="f-k">yêu cầu script từ chối và giao lại cho Haiku (giờ web không có)</span></div>
+ <div class="zero"><span class="f-v num">{sum(r['outcome'] == 'wrong_data' for r in chk)}</span><span class="f-k">yêu cầu điền sai mà không báo</span></div>
+ <div><span class="f-v num">{sum(r['outcome'] == 'success' for r in fo)}/{len(fo)}</span><span class="f-k">lần Haiku cứu được khi script hỏng (thử bằng cách làm hỏng trang)</span></div>
 </div>
-<div class="tbl"><table><thead><tr><th>Web</th><th class="r">Chi phí học + sinh script</th><th class="r">Tiết kiệm mỗi lượt</th><th class="r">Hòa vốn sau</th></tr></thead><tbody>""")
+<h3>Bao lâu thì có lời</h3>
+<p class="sub">Ghi nhớ có giá: phải cho Haiku làm một lần rồi sinh script. Sau đó mỗi lần dùng script tiết kiệm được tiền gọi Claude. Ví dụ {E(SITES[ex_site])}: ghi nhớ tốn <b class="num">{money(ex['learn'])}</b>, mỗi lần dùng script tiết kiệm <b class="num">{money(ex['save'])}</b>, nên từ lần đặt thứ <b class="num">{ex['n']}</b> là có lời.</p>
+<div class="tbl"><table><thead><tr><th>Web</th><th class="r">Chi phí ghi nhớ</th><th class="r">Tiết kiệm mỗi lần</th><th class="r">Có lời từ lần thứ</th></tr></thead><tbody>""")
     for site, name in SITES.items():
         b = bev[site]
         if b:
-            h.append(f'<tr><td>{E(name)}</td><td class="r num">{money(b["learn"])}</td><td class="r num">{money(b["save"])}</td><td class="r num"><strong>{b["n"]} lượt</strong></td></tr>')
-    h.append('</tbody></table></div><p class="sub">N* = chi phí học ÷ (chi phí lượt Haiku chạy chay − chi phí lượt script).</p></section>')
+            h.append(f'<tr><td>{E(name)}</td><td class="r num">{money(b["learn"])}</td><td class="r num">{money(b["save"])}</td><td class="r num"><strong>{b["n"]}</strong></td></tr>')
+    h.append("</tbody></table></div></section>")
 
     # ---------- script v2 ----------
-    h.append("""<section id="script-v2"><h2>Script cache v2</h2>
-<p class="sub">Ảnh chụp từng bước (25/11) lộ 3 lỗi trong script v1 do Haiku sinh. Đã sửa tay thành v2; bản v1 vẫn giữ trong file script. Số đo 24/11 ở trên là của v1.</p>
+    h.append("""<section id="script-v2"><h2>Sửa script sau khi xem ảnh</h2>
+<p class="sub">Ngày 25/11, chạy lại script và chụp ảnh từng bước. Ảnh cho thấy 3 script do Haiku viết còn lỗi. Đã sửa tay thành bản v2; bản gốc (v1) vẫn được giữ. Các số ở trên là của bản v1.</p>
 <div class="fixes">""")
     FIX = {
-        "real_lauphan": ("Giờ có lúc bị đặt lại về “Chọn” sau khi điền: script kết thúc khi ô Giờ còn đang tải.", "Chờ ô Giờ đứng yên 2 giây; bị đặt lại thì chọn lại."),
-        "real_kingbbq": ("Chọn nhà hàng khi danh sách chưa tải xong, nên script tự từ chối.", "Chờ danh sách nhà hàng tải xong rồi mới chọn."),
-        "real_lauwang": ("Gán thẳng vào ô <select> ẩn: giá trị đúng nhưng ô hiển thị vẫn ghi “Giờ” / “Chọn cơ sở”.", "Chọn qua widget của theme, kiểm tra cả chữ hiển thị."),
+        "real_lauphan": ("Có lần giờ bị xóa về “Chọn” sau khi đã chọn 18:00. Web tải lại danh sách giờ chậm, script đã kết thúc trước đó.",
+                         "Sau khi điền xong, script chờ ô Giờ đứng yên 2 giây. Nếu giờ bị xóa thì chọn lại."),
+        "real_kingbbq": ("Script chọn nhà hàng khi danh sách nhà hàng chưa tải xong, không tìm thấy nên từ chối.",
+                         "Chờ danh sách nhà hàng tải xong rồi mới chọn."),
+        "real_lauwang": ("Giá trị trong form đúng, nhưng trên màn hình ô Giờ và ô Cơ sở vẫn hiện “Giờ”, “Chọn cơ sở”, như chưa chọn.",
+                         "Chọn bằng cách bấm vào ô hiển thị như người dùng, và kiểm tra cả chữ hiện trên màn hình."),
     }
     for site, (bug, fix) in FIX.items():
         def t(ver):
             rs = [r for r in runs if r["site"] == site and r.get("script", "v1") == ver]
-            c = Counter(r["outcome"] for r in rs)
-            return f"{c['success']}/{len(rs)}" if rs else "—"
+            return f"{sum(r['outcome'] == 'success' for r in rs)}/{len(rs)}" if rs else "—"
         rcs = [r for r in rc if r["site"] == site]
-        rcc = Counter(r["outcome"] for r in rcs)
-        h.append(f'<article class="fix"><h3>{E(SITES[site])}</h3><dl><dt>Lỗi ở v1</dt><dd>{E(bug)}</dd><dt>Sửa ở v2</dt><dd>{E(fix)}</dd></dl>'
-                 f'<div class="fix-n"><span><b class="num">{t("v1")}</b> v1 đúng</span><span><b class="num">{t("v2")}</b> v2 đúng</span>'
-                 f'<span><b class="num">{rcc["wrong_data"]}</b> điền sai / {len(rcs)} ca đổi dữ liệu (v2)</span></div></article>')
-    h.append("</div><p class=\"sub\">Lần chạy lại: không gọi LLM, sau lớp chặn. Lẩu Phan có 1 lần sai với v1 trước khi bắt đầu ghi log, không nằm trong số đếm.</p></section>")
+        h.append(f'<article class="fix"><h3>{E(SITES[site])}</h3><dl><dt>Lỗi ở bản v1</dt><dd>{E(bug)}</dd><dt>Bản v2 sửa</dt><dd>{E(fix)}</dd></dl>'
+                 f'<div class="fix-n"><span>v1 đúng <b class="num">{t("v1")}</b></span><span>v2 đúng <b class="num">{t("v2")}</b></span>'
+                 f'<span>v2 điền sai <b class="num">{sum(r["outcome"] == "wrong_data" for r in rcs)}/{len(rcs)}</b> yêu cầu khác</span></div></article>')
+    h.append("</div></section>")
 
     # ---------- từng web ----------
-    h.append('<section id="tung-web"><h2>Từng web, từng bước</h2><p class="sub">Ảnh chụp mỗi khi form đổi; ô viền đỏ là ô vừa đổi. Ảnh đầu là trang vừa tải xong; ảnh cuối chụp sau 3 giây chờ, đúng trạng thái được chấm. Bấm ảnh để xem cỡ lớn.</p>')
+    h.append('<section id="tung-web"><h2>Từng web, từng bước</h2><p class="sub">Ảnh chụp mỗi khi form thay đổi. Ô viền đỏ là ô vừa được điền. Ảnh cuối chụp sau 3 giây chờ trang ổn định, đúng trạng thái được chấm. Bấm vào ảnh để xem cỡ lớn.</p>')
     h.append('<div class="site-tabs">' + "".join(f'<a href="#{s[5:]}">{E(n)}</a>' for s, n in SITES.items()) + "</div>")
     for site, name in SITES.items():
         d = json.loads((SHOTS / site / "steps.json").read_text(encoding="utf-8"))
         rs = [r for r in runs if r["site"] == site and r.get("script", "v1") == d.get("script", "v1")]
-        c = Counter(r["outcome"] for r in rs)
         h.append(f'<article class="site" id="{site[5:]}"><div class="site-head"><h3>{E(name)}</h3><a class="mono url" href="{E(d["url"])}" target="_blank" rel="noopener">{E(d["url"])}</a></div>'
-                 f'<p class="site-meta">{pill(d["outcome"])} Script <b>{d.get("script", "v1")}</b> · {f1(d["ms"] / 1000)} s · lần chạy lại với script này: <b class="num">{c["success"]}/{len(rs)}</b> đúng'
-                 f' · lớp chặn: {len(d["guard_blocked"])} request bị chặn, {d["guard_submit_attempts"]} lần dữ liệu khách định rời trang</p>')
+                 f'<p class="site-meta">{pill(d["outcome"])} Script bản <b>{d.get("script", "v1")}</b> điền xong trong <b class="num">{f1(d["ms"] / 1000)} giây</b>. '
+                 f'Chạy lại bản này <b class="num">{len(rs)}</b> lần, đúng <b class="num">{sum(r["outcome"] == "success" for r in rs)}</b> lần. '
+                 f'Không có thông tin khách nào bị gửi ra ngoài.</p>')
         h.append(steps_html(site, d, ""))
         bad = SHOTS / site / "run_loi" / "steps.json"
         if bad.exists():
             b = json.loads(bad.read_text(encoding="utf-8"))
-            h.append(f'<details class="bad-run"><summary>{pill(b["outcome"])} Một lần chạy không đúng (script {b.get("script", "v1")}): {E((b["err"] or "")[:120])}</summary>{steps_html(site, b, "run_loi")}</details>')
+            h.append(f'<details class="bad-run"><summary>{pill(b["outcome"])} Xem một lần script bản {b.get("script", "v1")} từ chối: danh sách nhà hàng chưa tải xong nên không tìm thấy chi nhánh</summary>{steps_html(site, b, "run_loi")}</details>')
         h.append("</article>")
     h.append("</section>")
 
-    # ---------- chưa kiểm chứng ----------
-    lw = [r for r in kind(R, "cold", HAIKU) if r["versions"].get("unscored") and r["outcome"] == "wrong_data"]
-    h.append(f"""<section id="chua-kiem-chung"><h2>Chưa kiểm chứng</h2><ul class="todo">
-<li>{len(lw)} lượt Haiku chạy chay ở Lẩu Wang (vòng {", ".join(str(r["rep"]) for r in lw)}) ghi sai giờ nhưng xếp không chấm, vì bộ đọc form không đọc được widget. Chưa chứng minh Haiku đã chọn đúng.</li>
-<li>Script v2 mới chạy lại ca chính và các ca đổi dữ liệu; thời gian và chi phí theo quy trình đo 24/11 vẫn là của v1.</li>
-<li>Sonnet 5.5 chưa đo trên web thật; Grok chưa đo (không có credit xAI). Gemini có {W['gemini']['unscored']} lượt không chấm (lỗi API hoặc widget).</li>
-<li>Mỗi web chỉ 5 vòng (hợp đồng gốc: 11), nên p95 gần bằng giá trị lớn nhất. Máy đo 24/11 chạy CPU rất cao, số giây chỉ dùng để so sánh tương đối.</li>
-<li>Chưa bấm nút đặt và chưa đi tới OTP của nhà hàng thật (cố ý). Cổng OTP lấy từ mock site: Haiku dừng đúng 10/10.</li>
+    # ---------- lưu ý ----------
+    h.append(f"""<section id="luu-y"><h2>Lưu ý</h2><ul class="todo">
+<li><b>{len(lw)} lượt Haiku ở Lẩu Wang chưa chấm được.</b> Chương trình chấm không đọc được ô giờ của web này nên không biết Haiku chọn đúng giờ hay không. Lỗi hiển thị ở Lẩu Wang (mục Sửa script) có thể là nguyên nhân, nhưng chưa kiểm chứng.</li>
+<li><b>Script bản v2 chưa được đo lại thời gian và chi phí</b> theo đúng quy trình ngày 24/11; mới chạy lại để kiểm tra đúng/sai.</li>
+<li><b>Claude Sonnet 5.5 chưa được đo</b> trên web thật vì không đủ ngân sách.</li>
+<li><b>Mỗi web chỉ đo 5 vòng</b>, ít hơn 11 vòng theo kế hoạch ban đầu. Máy đo ngày 24/11 rất bận, nên số giây chỉ nên dùng để so sánh giữa các cách.</li>
+<li><b>Chưa bấm nút Đặt bàn và chưa nhận mã OTP thật</b> của nhà hàng, vì cố ý không tạo đơn thật.</li>
 </ul>
-<p class="foot">Sinh bởi <span class="mono">bench/llm/html_report.py</span> từ <span class="mono">results/llm/</span>. Báo cáo đầy đủ: <span class="mono">reports/llm.md</span>; bảng tính: <span class="mono">results/llm/real/llm_web.xlsx</span>.</p></section></main>""")
+<p class="foot">Sinh bởi <span class="mono">bench/llm/html_report.py</span> từ dữ liệu trong <span class="mono">results/llm/</span>. Báo cáo kỹ thuật: <span class="mono">reports/llm.md</span>.</p></section></main>""")
     return "\n".join(h)
 
 
@@ -366,6 +428,32 @@ td small{color:var(--muted);font-size:11px}
 .todo{margin:0;padding-left:20px;max-width:80ch;display:flex;flex-direction:column;gap:6px}
 .foot{font-size:13px;color:var(--muted);margin:8px 0 0}
 @media (max-width:600px){.bar-row{grid-template-columns:1fr 90px}.bar-label{grid-column:1/-1}.bar-track{grid-column:1}}
+.explain{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.explain>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.explain h3{margin:0 0 4px;font-size:15px}
+.explain p{margin:0;font-size:14px;color:var(--muted)}
+.explain p b{color:var(--ink)}
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;counter-reset:f}
+.flow li{counter-increment:f;position:relative;padding:14px 16px 14px 52px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:14px;color:var(--muted);min-width:0}
+.flow li::before{content:counter(f);position:absolute;left:14px;top:14px;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-size:13px}
+.flow li>b:first-of-type{color:var(--ink);display:block;margin-bottom:2px}
+.flow li b{color:var(--ink)}
+.flow-k{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:600}
+.glossary{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:6px 16px;margin:0;font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.glossary dt{font-weight:600}
+.glossary dd{margin:0;color:var(--muted)}
+.facts .zero .f-v{color:var(--ok)}
+.v-d{margin:0}
+.v-d b{color:var(--ink)}
+.step-top{grid-column:1/-1;display:flex;justify-content:space-between}
+.step figcaption{display:flex;flex-direction:column;gap:6px}
+.step-a{font-family:var(--f-body)!important;font-size:13px!important;color:var(--ink)!important}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;margin:0;font-size:12px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.code summary{cursor:pointer;font-size:11px;color:var(--muted)}
+.code code{display:block;margin-top:4px;font-family:var(--f-mono);font-variant-ligatures:none;font-size:10.5px;color:var(--muted);overflow-wrap:anywhere;white-space:pre-wrap}
+@media (max-width:600px){.glossary{grid-template-columns:1fr}.glossary dd{margin-bottom:6px}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 """
 
