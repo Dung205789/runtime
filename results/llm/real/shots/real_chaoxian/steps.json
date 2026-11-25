@@ -1,0 +1,135 @@
+{
+ "site": "real_chaoxian",
+ "url": "https://chaoxian.com.vn/dat-ban",
+ "case": {
+  "party": 3,
+  "time": "18:00",
+  "day": "ngày mai",
+  "name": "Khach Thu Nghiem"
+ },
+ "ms": 10899.209262,
+ "err": null,
+ "steps": [
+  {
+   "n": 1,
+   "t": 3.24,
+   "action": "new_tab(https://chaoxian.com.vn/dat-ban)",
+   "changed": [
+    "URL → https://chaoxian.com.vn/dat-ban"
+   ],
+   "file": "01.png"
+  },
+  {
+   "n": 2,
+   "t": 7.63,
+   "action": "wait_for_load()",
+   "changed": [
+    "selectCoso = Chọn",
+    "selectSoNguoi = 1",
+    "selectDay = Hôm nay",
+    "selectHour = Chọn"
+   ],
+   "file": "02.png"
+  },
+  {
+   "n": 3,
+   "t": 7.91,
+   "action": "js((()=>{ const s=document.getElementById(\"selectCoso\"); s.value=\"68737cd823d94c3bb82bc42a\"; s.dispatchEvent(new Event('in…)",
+   "changed": [
+    "selectCoso = Chao Xian Kim Mã"
+   ],
+   "file": "03.png"
+  },
+  {
+   "n": 4,
+   "t": 8.19,
+   "action": "js((()=>{ const s=document.getElementById(\"selectSoNguoi\"); s.value=\"3\"; s.dispatchEvent(new Event('input',{bubbles:true})…)",
+   "changed": [
+    "selectSoNguoi = 3"
+   ],
+   "file": "04.png"
+  },
+  {
+   "n": 5,
+   "t": 8.47,
+   "action": "js((()=>{ const s=document.getElementById(\"selectDay\"); s.value=\"1\"; s.dispatchEvent(new Event('input',{bubbles:true})); s…)",
+   "changed": [
+    "selectDay = Ngày mai"
+   ],
+   "file": "05.png"
+  },
+  {
+   "n": 6,
+   "t": 9.55,
+   "action": "js((()=>{ const s=document.getElementById(\"selectHour\"); s.value=\"18:00:00\"; s.dispatchEvent(new Event('input',{bubbles:tr…)",
+   "changed": [
+    "selectHour = 18:00"
+   ],
+   "file": "06.png"
+  },
+  {
+   "n": 7,
+   "t": 9.8,
+   "action": "type_text(Khach Thu Nghiem)",
+   "changed": [
+    "nameOrder = Khach Thu Nghiem"
+   ],
+   "file": "07.png"
+  },
+  {
+   "n": 8,
+   "t": 10.28,
+   "action": "type_text(0000000000)",
+   "changed": [
+    "sdtOrder = 0000000000"
+   ],
+   "file": "08.png"
+  },
+  {
+   "n": 9,
+   "t": 10.73,
+   "action": "kết thúc script: form đã điền, dừng trước nút đặt",
+   "changed": [],
+   "file": "09.png"
+  }
+ ],
+ "form": [
+  [
+   "selectCoso",
+   "Chao Xian Kim Mã"
+  ],
+  [
+   "selectSoNguoi",
+   "3"
+  ],
+  [
+   "selectDay",
+   "Ngày mai"
+  ],
+  [
+   "selectHour",
+   "18:00"
+  ],
+  [
+   "nameOrder",
+   "Khach Thu Nghiem"
+  ],
+  [
+   "sdtOrder",
+   "0000000000"
+  ]
+ ],
+ "check": {
+  "name": true,
+  "phone": true,
+  "party": true,
+  "time": true,
+  "date": true
+ },
+ "outcome": "success",
+ "guard_blocked": [],
+ "guard_allowed_posts": [
+  "chaoxian.com.vn/dat-ban #loadCosoInfo"
+ ],
+ "guard_submit_attempts": 0
+}

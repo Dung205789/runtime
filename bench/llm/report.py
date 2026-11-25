@@ -283,6 +283,27 @@ def build() -> str:
     L.append("`actions` trên mock site là bản cũ (gợi ý code đưa vào prompt, LLM vẫn chạy), dừng sau 4/10 task khi chuyển sang web thật.")
     L.append("")
 
+    L.append("## 7b. Chạy lại script cache có chụp ảnh (25/11, Linux, không gọi LLM)")
+    L.append("")
+    L.append("Sinh bởi `uv run python -m bench.llm.shots`; ảnh và từng bước ở `results/llm/real/shots/`, xem kèm ảnh trong `results/llm/real/llm_web.xlsx`.")
+    L.append("")
+    L.append("| Web | Lần chạy | Kết quả | Trường sai | Ảnh | Request bị lớp chặn chặn | Dữ liệu khách định rời trang |")
+    L.append("|---|---|---|---|---|---|---|")
+    shots = Path("results/llm/real/shots")
+    for site in combo_report.SITES:
+        for sub, label in (("run_loi", "lần 1"), ("", "lần cuối")):
+            f = shots / site / sub / "steps.json"
+            if not f.exists():
+                continue
+            d = json.loads(f.read_text(encoding="utf-8"))
+            bad_f = ", ".join(k for k, x in d["check"].items() if not x) or "—"
+            L.append(f"| {site[5:]} | {label} | {d['outcome']} | {bad_f} | {len(d['steps'])} | {len(d['guard_blocked'])} | {d['guard_submit_attempts']} |")
+    L.append("")
+    L.append("Quan sát từ ảnh (không phải số đo):")
+    L.append("- **Lẩu Phan**: script kết thúc khi ô Giờ còn đang tải; danh sách giờ tải xong thì ghi đè lựa chọn về 'Chọn'. Lỗi chập chờn (lần 1 sai, lần 2 đúng). Cần sửa script: chờ ô Giờ hết tải rồi mới chọn, và kiểm tra lại giá trị ở cuối.")
+    L.append("- **Lẩu Wang**: ô `<select>` gốc có giờ và cơ sở đúng, nhưng widget hiển thị vẫn ghi 'Giờ' / 'Chọn cơ sở'. Chưa biết web có nhận giá trị khi bấm đặt hay không.")
+    L.append("")
+
     L.append("## 8. Chưa kiểm chứng")
     L.append("")
     for m in models:
